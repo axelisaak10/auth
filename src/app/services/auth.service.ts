@@ -5,6 +5,10 @@ export interface UserSession {
     email: string;
     nombre: string;
     rol: string;
+    usuario: string;
+    telefono: string;
+    direccion: string;
+    fechaNacimiento: string;
 }
 
 @Injectable({
@@ -17,8 +21,12 @@ export class AuthService {
 
     private readonly MOCK_USER: UserSession = {
         email: 'admin@seguridad.com',
-        nombre: 'Administrador',
+        nombre: 'Carlos Administrador',
         rol: 'Admin',
+        usuario: 'admin_carlos',
+        telefono: '5512345678',
+        direccion: 'Av. Reforma 123, Col. Centro, CDMX',
+        fechaNacimiento: '1995-06-15',
     };
 
     private _isLoggedIn = signal(this.checkStorage());

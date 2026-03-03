@@ -1,0 +1,84 @@
+<div class="user-profile-container">
+    <!-- Header Card -->
+    <p-card styleClass="profile-header-card">
+        <div class="profile-header">
+            <p-avatar [label]="userInitial" size="xlarge" shape="circle" styleClass="profile-avatar" />
+            <div class="profile-header-info">
+                <h2 class="profile-name">{{ user?.nombre }}</h2>
+                <p class="profile-username">&#64;{{ user?.usuario }}</p>
+                <p-tag [value]="user?.rol ?? ''" icon="pi pi-shield" severity="info" />
+            </div>
+        </div>
+    </p-card>
+
+    <!-- Details Card -->
+    <p-card header="Información del Usuario" styleClass="profile-details-card">
+        <div class="details-grid">
+            <div class="detail-item">
+                <div class="detail-icon">
+                    <i class="pi pi-user"></i>
+                </div>
+                <div class="detail-content">
+                    <span class="detail-label">Usuario</span>
+                    <span class="detail-value">{{ user?.usuario }}</span>
+                </div>
+            </div>
+
+            <div class="detail-item">
+                <div class="detail-icon">
+                    <i class="pi pi-envelope"></i>
+                </div>
+                <div class="detail-content">
+                    <span class="detail-label">Correo Electrónico</span>
+                    <span class="detail-value">{{ user?.email }}</span>
+                </div>
+            </div>
+
+            <p-divider />
+
+            <div class="detail-item">
+                <div class="detail-icon">
+                    <i class="pi pi-phone"></i>
+                </div>
+                <div class="detail-content">
+                    <span class="detail-label">Teléfono</span>
+                    <span class="detail-value">{{ user?.telefono }}</span>
+                </div>
+            </div>
+
+            <div class="detail-item">
+                <div class="detail-icon">
+                    <i class="pi pi-map-marker"></i>
+                </div>
+                <div class="detail-content">
+                    <span class="detail-label">Dirección</span>
+                    <span class="detail-value">{{ user?.direccion }}</span>
+                </div>
+            </div>
+
+            <p-divider />
+
+            <div class="detail-item">
+                <div class="detail-icon">
+                    <i class="pi pi-calendar"></i>
+                </div>
+                <div class="detail-content">
+                    <span class="detail-label">Fecha de Nacimiento</span>
+                    <span class="detail-value">{{ fechaFormateada }}</span>
+                </div>
+            </div>
+
+            <div class="detail-item">
+                <div class="detail-icon">
+                    <i class="pi pi-shield"></i>
+                </div>
+                <div class="detail-content">
+                    <span class="detail-label">Rol</span>
+                    <span class="detail-value">
+                        <p-tag [value]="user?.rol ?? ''" severity="info" />
+                    </span>
+                </div>
+            </div>
+        </div>
+    </p-card>
+</div>

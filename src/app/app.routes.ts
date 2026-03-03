@@ -24,6 +24,14 @@ export const routes: Routes = [
                 path: '',
                 loadComponent: () => import('./peges/home/home').then(m => m.Home),
             },
+            {
+                path: 'user',
+                loadComponent: () => import('./peges/user/user').then(m => m.User),
+            },
+            {
+                path: 'group',
+                loadComponent: () => import('./peges/group/group').then(m => m.Group),
+            },
         ],
     },
 ];

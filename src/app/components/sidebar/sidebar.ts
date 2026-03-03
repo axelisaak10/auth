@@ -15,7 +15,8 @@ export class Sidebar {
 
   menuItems = [
     { label: 'Dashboard', icon: 'pi pi-home', route: '/home' },
-    { label: 'Usuarios', icon: 'pi pi-users', route: '/home' },
+    { label: 'Usuarios', icon: 'pi pi-users', route: '/home/user' },
+    { label: 'Grupos', icon: 'pi pi-th-large', route: '/home/group' },
     { label: 'Reportes', icon: 'pi pi-chart-bar', route: '/home' },
     { label: 'Configuración', icon: 'pi pi-cog', route: '/home' },
   ];
