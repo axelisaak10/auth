@@ -1,0 +1,47 @@
+<div class="home-wrapper">
+  <!-- Header de bienvenida -->
+  <div class="welcome-banner">
+    <div class="welcome-text">
+      <h1>¡Bienvenido de nuevo! 👋</h1>
+      <p>Aquí tienes un resumen de tu actividad reciente.</p>
+    </div>
+    <div class="welcome-avatar">
+      <i class="pi pi-user"></i>
+    </div>
+  </div>
+
+  <!-- Tarjetas de estadísticas -->
+  <div class="stats-grid">
+    <p-card *ngFor="let stat of stats" styleClass="stat-card">
+      <div class="stat-content">
+        <div class="stat-icon" [style.background]="stat.color + '22'">
+          <i class="pi" [ngClass]="stat.icon" [style.color]="stat.color"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-value">{{ stat.value }}</span>
+          <span class="stat-label">{{ stat.label }}</span>
+        </div>
+      </div>
+    </p-card>
+  </div>
+
+  <!-- Panel de actividad reciente -->
+  <div class="section-title">
+    <i class="pi pi-clock"></i>
+    <h2>Actividad Reciente</h2>
+  </div>
+
+  <p-card styleClass="activity-card">
+    <ul class="activity-list">
+      <li *ngFor="let activity of recentActivity" class="activity-item">
+        <div class="activity-icon" [ngClass]="'severity-' + activity.severity">
+          <i class="pi" [ngClass]="activity.icon"></i>
+        </div>
+        <div class="activity-details">
+          <span class="activity-text">{{ activity.text }}</span>
+          <span class="activity-time">{{ activity.time }}</span>
+        </div>
+      </li>
+    </ul>
+  </p-card>
+</div>

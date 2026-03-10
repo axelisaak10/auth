@@ -1,0 +1,82 @@
+<div class="fadein">
+  <div *ngIf="success" class="success-state text-center">
+    <i class="pi pi-check-circle"></i>
+    <h2>¡Registro Completado!</h2>
+    <p>Tu cuenta ha sido creada bajo las normas de seguridad.</p>
+    <p-button label="Volver al Inicio de Sesión" icon="pi pi-arrow-left" (onClick)="volverAlLogin()" />
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="registrar()" *ngIf="!success">
+    <h1 class="form-title">Crear Nueva Cuenta</h1>
+
+    <div class="grid-layout">
+      <div class="field">
+        <label>Nombre Completo</label>
+        <input pInputText formControlName="fullName" class="w-full"
+               [class.p-invalid]="isInvalid('fullName')" placeholder="Nombre y Apellidos" />
+        <small class="p-error" *ngIf="isInvalid('fullName')">Ingresa un nombre válido (solo letras).</small>
+      </div>
+
+      <div class="field">
+        <label>Nombre de Usuario</label>
+        <input pInputText formControlName="username" class="w-full"
+               [class.p-invalid]="isInvalid('username')" placeholder="usuario123" />
+        <small class="p-error" *ngIf="isInvalid('username')">Mínimo 3 caracteres.</small>
+      </div>
+
+      <div class="field">
+        <label>Correo Electrónico</label>
+        <input pInputText formControlName="email" class="w-full"
+               [class.p-invalid]="isInvalid('email')" placeholder="ejemplo@gmail.com" />
+        <small class="p-error" *ngIf="f['email'].errors?.['invalidDomain'] && (f['email'].dirty || submitted)">
+          Usa @gmail.com, @hotmail.com o @outlook.com
+        </small>
+      </div>
+
+      <div class="field">
+        <label>Contraseña</label>
+        <p-password formControlName="password" [toggleMask]="true" [feedback]="false"
+                    styleClass="w-full" inputStyleClass="w-full" (onInput)="onPasswordInput()"
+                    [class.p-invalid]="isInvalid('password')" />
+
+        <div class="s-bar" *ngIf="f['password'].value">
+          <div class="fill" [style.width.%]="pwFortaleza" [style.background]="pwColor"></div>
+        </div>
+
+        <div *ngIf="isInvalid('password')">
+          <small class="p-error" *ngIf="f['password'].errors?.['minLen']">- Mínimo 10 caracteres.</small>
+          <small class="p-error" *ngIf="f['password'].errors?.['sinSim']">- Incluye un símbolo (!@#$).</small>
+          <small class="p-error" *ngIf="f['password'].errors?.['sinMay']">- Incluye una Mayúscula.</small>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Confirmar Contraseña</label>
+        <p-password formControlName="confirmPassword" [toggleMask]="true" [feedback]="false"
+                    styleClass="w-full" inputStyleClass="w-full"
+                    [class.p-invalid]="isInvalid('confirmPassword') || (form.errors?.['noCoinciden'] && f['confirmPassword'].dirty)" />
+        <small class="p-error" *ngIf="form.errors?.['noCoinciden'] && (f['confirmPassword'].dirty || submitted)">
+          Las contraseñas no coinciden.
+        </small>
+      </div>
+
+      <div class="field">
+        <label>Fecha de Nacimiento</label>
+        <p-datepicker formControlName="birthDate" [maxDate]="maxDate" dateFormat="dd/mm/yy"
+                      styleClass="w-full" inputStyleClass="w-full" [class.p-invalid]="isInvalid('birthDate')" />
+        <small class="p-error" *ngIf="f['birthDate'].errors?.['menorEdad']">Debes ser mayor de 18 años.</small>
+      </div>
+
+      <div class="field">
+        <label>Teléfono (10 dígitos)</label>
+        <input pInputText formControlName="phone" class="w-full"
+               (input)="filtrarNumeros($event)" maxlength="10"
+               placeholder="5512345678" [class.p-invalid]="isInvalid('phone')" />
+        <small class="p-error" *ngIf="isInvalid('phone')">Deben ser 10 números exactos.</small>
+      </div>
+    </div>
+
+    <p-button type="submit" label="Crear Cuenta" styleClass="btn-auth"
+              [icon]="submitted && form.invalid ? 'pi pi-exclamation-triangle' : 'pi pi-user-plus'" />
+  </form>
+</div>

@@ -1,0 +1,28 @@
+<div class="fadein">
+  <div class="creds-hint-mini">
+    <i class="pi pi-info-circle"></i>
+    <span>Prueba con <b>admin</b> / <b>Admin@2024!</b></span>
+  </div>
+
+  <div class="field">
+    <label>Usuario</label>
+    <input pInputText [(ngModel)]="username" class="w-full"
+           [class.p-invalid]="usernameError" placeholder="Nombre de usuario" />
+    <small class="p-error" *ngIf="usernameError">{{ usernameError }}</small>
+  </div>
+
+  <div class="field">
+    <label>Contraseña</label>
+    <p-password [(ngModel)]="password" [feedback]="false" [toggleMask]="true"
+                styleClass="w-full" inputStyleClass="w-full"
+                [class.p-invalid]="passwordError" placeholder="••••••••" />
+    <small class="p-error" *ngIf="passwordError">{{ passwordError }}</small>
+  </div>
+
+  <p-button label="Iniciar Sesión" (onClick)="login()" styleClass="btn-auth" />
+
+  <div class="link-footer">
+    <span>¿No tienes cuenta?</span>
+    <p-button label="Regístrate" [link]="true" (onClick)="goToRegister.emit()" />
+  </div>
+</div>

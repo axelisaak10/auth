@@ -1,0 +1,23 @@
+<div class="auth-page-wrapper">
+  <div class="auth-wrapper">
+    <div class="auth-card">
+      <div class="card-header">
+        <i class="pi pi-shield logo-icon"></i>
+      </div>
+      <p-tabs [value]="activeTab">
+        <p-tablist>
+          <p-tab value="0"><i class="pi pi-sign-in" style="margin-right:6px"></i> Iniciar Sesi\xc3\xb3n</p-tab>
+          <p-tab value="1"><i class="pi pi-user-plus" style="margin-right:6px"></i> Registrarse</p-tab>
+        </p-tablist>
+        <p-tabpanels>
+          <p-tabpanel value="0">
+            <app-login (goToRegister)="goToRegister()" (loginSuccess)="onLoginSuccess()" />
+          </p-tabpanel>
+          <p-tabpanel value="1">
+            <app-register (goToLogin)="goToLogin()" />
+          </p-tabpanel>
+        </p-tabpanels>
+      </p-tabs>
+    </div>
+  </div>
+</div>

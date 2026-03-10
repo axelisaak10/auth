@@ -1,0 +1,118 @@
+:host { display: block; }
+
+.admin-users-page {
+  padding: 2rem;
+  background: #f8fafc;
+  min-height: 100vh;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* ── Header ─────────────────────────── */
+.page-header {
+  margin-bottom: 2rem;
+}
+
+.page-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  i { color: #6366f1; }
+}
+
+.page-subtitle { color: #64748b; font-size: 0.9rem; margin: 0; }
+
+/* ── Card ───────────────────────────── */
+.card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+  border: 1px solid #f1f5f9;
+}
+
+/* ── User cell ──────────────────────── */
+.user-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.avatar-mini {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #6366f1;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.username-text {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+/* ── Action buttons ─────────────────── */
+.action-btns {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ── Dialog body ────────────────────── */
+.dialog-body {
+  padding: 0.5rem 0;
+}
+
+.perm-group {
+  margin-bottom: 1rem;
+}
+
+.group-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #6366f1;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.perm-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem 1rem;
+  padding: 0 0.25rem;
+
+  @media (max-width: 480px) { grid-template-columns: 1fr; }
+}
+
+.perm-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.perm-label {
+  font-size: 0.875rem;
+  color: #374151;
+  cursor: pointer;
+  flex: 1;
+}
+
+.perm-code {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  background: #f1f5f9;
+  border-radius: 4px;
+  padding: 1px 5px;
+  white-space: nowrap;
+}

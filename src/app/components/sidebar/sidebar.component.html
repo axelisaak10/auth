@@ -1,0 +1,30 @@
+<aside class="sidebar" [class.collapsed]="collapsed">
+  <div class="sidebar-header">
+    <i class="pi pi-shield logo-icon"></i>
+    <span class="app-name" *ngIf="!collapsed">MyApp</span>
+    <button class="toggle-btn" (click)="toggleCollapse()">
+      <i class="pi" [ngClass]="collapsed ? 'pi-angle-right' : 'pi-angle-left'"></i>
+    </button>
+  </div>
+
+  <nav class="sidebar-nav">
+    <ul>
+      <li *ngFor="let item of visibleItems" [class.active]="item.active">
+        <a (click)="navigate(item)" class="nav-item" [title]="collapsed ? item.label : ''">
+          <i class="pi" [ngClass]="item.icon"></i>
+          <span class="nav-label" *ngIf="!collapsed">{{ item.label }}</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <div class="sidebar-footer">
+    <a class="nav-item logout" (click)="logout()" [title]="collapsed ? 'Cerrar Sesión' : ''">
+      <i class="pi pi-sign-out"></i>
+      <span class="nav-label" *ngIf="!collapsed">Cerrar Sesión</span>
+    </a>
+    <div class="version-badge" *ngIf="!collapsed">
+      <span>v1.0.0</span>
+    </div>
+  </div>
+</aside>

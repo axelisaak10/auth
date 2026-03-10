@@ -1,0 +1,83 @@
+.auth-wrapper {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.auth-card {
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.18);
+  overflow: hidden;
+  animation: slideUp 0.45s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(32px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.card-header {
+  background: linear-gradient(135deg, #0f3460 0%, #533483 100%);
+  padding: 32px 36px 28px;
+  text-align: center;
+  color: #fff;
+
+  .logo-icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 10px;
+  }
+  h1 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    margin: 0 0 4px;
+  }
+  p { margin: 0; opacity: 0.78; font-size: 0.87rem; }
+}
+
+::ng-deep {
+  .p-tabs { border: none !important; }
+
+  .p-tablist {
+    background: #f3f4f6 !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    padding: 0 !important;
+    display: flex;
+  }
+
+  .p-tab {
+    flex: 1;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #6b7280 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 14px 8px !important;
+    background: transparent !important;
+    transition: all 0.25s;
+    gap: 6px;
+
+    i { font-size: 0.85rem; }
+    &:hover { background: #e9ecf0 !important; color: #374151 !important; }
+  }
+
+  .p-tab[data-p-active="true"] {
+    color: #0f3460 !important;
+    border-bottom: 3px solid #0f3460 !important;
+    background: #fff !important;
+  }
+
+  .p-tabpanels {
+    padding: 28px 32px 32px !important;
+    max-height: 72vh;
+    overflow-y: auto;
+    background: #fff !important;
+
+    &::-webkit-scrollbar { width: 5px; }
+    &::-webkit-scrollbar-thumb { background: #0f3460; border-radius: 10px; }
+  }
+}

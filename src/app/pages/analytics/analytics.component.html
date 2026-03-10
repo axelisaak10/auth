@@ -1,0 +1,280 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="analytics-page">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title"><i class="pi pi-chart-bar"></i> Analítica</h1>
+      <p class="page-subtitle">Gestión y métricas de usuarios</p>
+    </div>
+  </div>
+
+  <p-tabs [(value)]="activeTab">
+    <p-tablist>
+      <p-tab value="0">
+        <i class="pi pi-chart-pie" style="margin-right:6px"></i> Total
+      </p-tab>
+      <p-tab value="1">
+        <i class="pi pi-chart-line" style="margin-right:6px"></i> Avanzado
+      </p-tab>
+    </p-tablist>
+
+    <p-tabpanels>
+
+      <!-- ══ TAB TOTAL (vacío) ══ -->
+      <p-tabpanel value="0">
+        <div class="empty-tab">
+          <i class="pi pi-chart-pie empty-icon"></i>
+          <h3>Sin datos disponibles</h3>
+          <p>Esta sección está pendiente de configuración.</p>
+        </div>
+      </p-tabpanel>
+
+      <!-- ══ TAB AVANZADO ══ -->
+      <p-tabpanel value="1">
+
+        <!-- Stats rápidos -->
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-icon blue"><i class="pi pi-users"></i></div>
+            <div><span class="stat-value">{{ totalUsers }}</span><span class="stat-label">Total</span></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon green"><i class="pi pi-check-circle"></i></div>
+            <div><span class="stat-value">{{ activeUsers }}</span><span class="stat-label">Activos</span></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon red"><i class="pi pi-ban"></i></div>
+            <div><span class="stat-value">{{ inactiveUsers }}</span><span class="stat-label">Inactivos</span></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon orange"><i class="pi pi-ticket"></i></div>
+            <div><span class="stat-value">{{ totalTickets }}</span><span class="stat-label">Tickets</span></div>
+          </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+          <div class="search-box">
+            <i class="pi pi-search"></i>
+            <input pInputText type="text" placeholder="Buscar usuario, email, rol..."
+                   [(ngModel)]="globalFilter" (input)="applyFilter()" />
+          </div>
+          @if (auth.currentUser()?.role === 'admin') {
+            <p-button label="Nuevo Usuario" icon="pi pi-plus" (onClick)="openNew()" />
+          }
+        </div>
+
+        <!-- Tabla -->
+        <p-table [value]="filteredUsers"
+                 [paginator]="true" [rows]="5"
+                 [rowsPerPageOptions]="[5,10,20]"
+                 styleClass="p-datatable-sm p-datatable-striped"
+                 [tableStyle]="{'min-width':'62rem'}">
+
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Usuario</th>
+              <th>Email</th>
+              <th>Rol</th>
+              <th>Nivel</th>
+              <th>Autor / Equipo</th>
+              <th>Tickets</th>
+              <th>Descripción</th>
+              <th>Estado</th>
+              @if (auth.currentUser()?.role === 'admin') {
+                <th style="width:120px; text-align:center">Acciones</th>
+              }
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="body" let-user>
+            <tr>
+              <td>
+                <div class="user-cell">
+                  <div class="avatar" [style.background]="user.avatarColor">{{ user.initials }}</div>
+                  <div>
+                    <span class="user-name">{{ user.fullName }}</span>
+                    <span class="user-sub">@{{ user.username }}</span>
+                  </div>
+                </div>
+              </td>
+              <td>{{ user.email }}</td>
+              <td><span class="role-badge">{{ user.role }}</span></td>
+              <td>{{ user.level }}</td>
+              <td>{{ user.author }}</td>
+              <td>
+                <span class="ticket-count">
+                  <i class="pi pi-ticket"></i> {{ user.tickets }}
+                </span>
+              </td>
+              <td class="desc-cell">{{ user.description }}</td>
+              <td>
+                <p-tag
+                  [value]="user.status === 'active' ? 'Activo' : 'Inactivo'"
+                  [severity]="user.status === 'active' ? 'success' : 'danger'" />
+              </td>
+              @if (auth.currentUser()?.role === 'admin') {
+                <td>
+                  <div class="action-btns">
+                    <p-button icon="pi pi-pencil"
+                              severity="info" [rounded]="true" [text]="true"
+                              (onClick)="openEdit(user)"
+                              pTooltip="Editar" tooltipPosition="top" />
+                    <p-button
+                              [icon]="user.status === 'active' ? 'pi pi-eye-slash' : 'pi pi-eye'"
+                              severity="warn" [rounded]="true" [text]="true"
+                              (onClick)="toggleStatus(user)"
+                              [pTooltip]="user.status === 'active' ? 'Desactivar' : 'Activar'"
+                              tooltipPosition="top" />
+                    <p-button icon="pi pi-trash"
+                              severity="danger" [rounded]="true" [text]="true"
+                              (onClick)="deleteUser(user)"
+                              pTooltip="Eliminar" tooltipPosition="top" />
+                  </div>
+                </td>
+              }
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="9" class="empty-row">No se encontraron usuarios.</td>
+            </tr>
+          </ng-template>
+
+        </p-table>
+
+      </p-tabpanel>
+    </p-tabpanels>
+  </p-tabs>
+
+</div>
+
+<!-- ══ DIALOG CRUD ══ -->
+<p-dialog
+  [(visible)]="dialogVisible"
+  [header]="isEditing ? 'Editar Usuario' : 'Nuevo Usuario'"
+  [modal]="true"
+  [style]="{width:'640px'}"
+  [draggable]="false"
+  [resizable]="false">
+
+  <form [formGroup]="form" *ngIf="form">
+    <div class="dialog-grid">
+
+      <div class="field">
+        <label>Nombre Completo</label>
+        <input pInputText formControlName="fullName" class="w-full"
+               [class.p-invalid]="isInvalid('fullName')"
+               placeholder="Nombre y Apellidos" />
+        <small class="p-error" *ngIf="isInvalid('fullName')">Solo letras.</small>
+      </div>
+
+      <div class="field">
+        <label>Nombre de Usuario</label>
+        <input pInputText formControlName="username" class="w-full"
+               [class.p-invalid]="isInvalid('username')"
+               placeholder="usuario123" />
+        <small class="p-error" *ngIf="isInvalid('username')">Mínimo 3 caracteres.</small>
+      </div>
+
+      <div class="field">
+        <label>Correo Electrónico</label>
+        <input pInputText formControlName="email" class="w-full"
+               [class.p-invalid]="isInvalid('email')"
+               placeholder="ejemplo@gmail.com" />
+        <small class="p-error"
+          *ngIf="f['email'].errors?.['invalidDomain'] && (f['email'].dirty || submitted)">
+          Usa @gmail.com, @hotmail.com o @outlook.com
+        </small>
+      </div>
+
+      <div class="field">
+        <label>Teléfono</label>
+        <input pInputText formControlName="phone" class="w-full"
+               [class.p-invalid]="isInvalid('phone')"
+               (input)="filtrarNumeros($event)" maxlength="10"
+               placeholder="5512345678" />
+        <small class="p-error" *ngIf="isInvalid('phone')">10 dígitos exactos.</small>
+      </div>
+
+      <div class="field">
+        <label>Fecha de Nacimiento</label>
+        <p-datepicker formControlName="birthDate" [maxDate]="maxDate"
+                      dateFormat="dd/mm/yy" styleClass="w-full" inputStyleClass="w-full"
+                      [class.p-invalid]="isInvalid('birthDate')" />
+      </div>
+
+      <div class="field">
+        <label>Rol</label>
+        <p-select formControlName="role"
+                  [options]="roleOptions" optionLabel="label" optionValue="value"
+                  styleClass="w-full" placeholder="Seleccionar rol" />
+      </div>
+
+      <div class="field">
+        <label>Nivel</label>
+        <p-select formControlName="level"
+                  [options]="levelOptions" optionLabel="label" optionValue="value"
+                  styleClass="w-full" placeholder="Seleccionar nivel" />
+      </div>
+
+      <div class="field">
+        <label>Autor / Equipo</label>
+        <input pInputText formControlName="author" class="w-full" placeholder="Equipo Alpha" />
+      </div>
+
+      <div class="field">
+        <label>Tickets Asignados</label>
+        <p-inputnumber formControlName="tickets" [min]="0"
+                       styleClass="w-full" inputStyleClass="w-full" />
+      </div>
+
+      <div class="field full">
+        <label>Descripción</label>
+        <textarea pTextarea formControlName="description" rows="2"
+                  class="w-full" placeholder="Descripción del usuario..."></textarea>
+      </div>
+
+      <div class="field">
+        <label>{{ isEditing ? 'Nueva Contraseña (opcional)' : 'Contraseña' }}</label>
+        <p-password formControlName="password" [toggleMask]="true" [feedback]="false"
+                    styleClass="w-full" inputStyleClass="w-full"
+                    (onInput)="onPasswordInput()"
+                    [class.p-invalid]="isInvalid('password')" />
+        <div class="s-bar" *ngIf="f['password']?.value">
+          <div class="fill" [style.width.%]="pwFortaleza" [style.background]="pwColor"></div>
+        </div>
+        <ng-container *ngIf="isInvalid('password')">
+          <small class="p-error" *ngIf="f['password'].errors?.['minLen']">- Mínimo 10 caracteres.</small>
+          <small class="p-error" *ngIf="f['password'].errors?.['sinSim']">- Incluye un símbolo (!@#$).</small>
+          <small class="p-error" *ngIf="f['password'].errors?.['sinMay']">- Incluye una Mayúscula.</small>
+        </ng-container>
+      </div>
+
+      <div class="field">
+        <label>Confirmar Contraseña</label>
+        <p-password formControlName="confirmPassword" [toggleMask]="true" [feedback]="false"
+                    styleClass="w-full" inputStyleClass="w-full"
+                    [class.p-invalid]="form.errors?.['noCoinciden'] && f['confirmPassword'].dirty" />
+        <small class="p-error"
+          *ngIf="form.errors?.['noCoinciden'] && (f['confirmPassword'].dirty || submitted)">
+          Las contraseñas no coinciden.
+        </small>
+      </div>
+
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" icon="pi pi-times"
+              severity="secondary" (onClick)="dialogVisible = false" />
+    <p-button
+      [label]="isEditing ? 'Guardar Cambios' : 'Crear Usuario'"
+      [icon]="isEditing ? 'pi pi-check' : 'pi pi-user-plus'"
+      (onClick)="guardar()" />
+  </ng-template>
+
+</p-dialog>

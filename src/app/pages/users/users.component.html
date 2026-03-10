@@ -1,0 +1,183 @@
+<p-toast position="top-right" />
+
+<div class="profile-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title"><i class="pi pi-user"></i> Mi Perfil</h1>
+      <p class="page-subtitle">Información personal y configuración de tu cuenta</p>
+    </div>
+    <div class="header-actions">
+      <p-button *ngIf="!editMode"
+        label="Editar Perfil" icon="pi pi-pencil"
+        (onClick)="toggleEdit()" />
+      <p-button *ngIf="editMode"
+        label="Cancelar" icon="pi pi-times" severity="secondary"
+        (onClick)="toggleEdit()" styleClass="mr-2" />
+      <p-button *ngIf="editMode"
+        label="Guardar Cambios" icon="pi pi-check"
+        (onClick)="guardar()" />
+    </div>
+  </div>
+
+  <div class="profile-layout">
+
+    <!-- Columna izquierda: resumen -->
+    <div class="profile-card left-card">
+
+      <div class="avatar-wrap">
+        <div class="avatar-circle" [style.background]="currentUser.avatarColor">
+          {{ currentUser.initials }}
+        </div>
+        <p-tag
+          [value]="currentUser.status === 'active' ? 'Activo' : 'Inactivo'"
+          [severity]="currentUser.status === 'active' ? 'success' : 'danger'" />
+      </div>
+
+      <h2 class="user-fullname">{{ currentUser.fullName }}</h2>
+      <p class="user-username">@{{ currentUser.username }}</p>
+
+      <p-divider />
+
+      <div class="info-list">
+        <div class="info-row">
+          <i class="pi pi-shield"></i>
+          <div><span class="lbl">Rol</span><span class="val">{{ currentUser.role }}</span></div>
+        </div>
+        <div class="info-row">
+          <i class="pi pi-star"></i>
+          <div><span class="lbl">Nivel</span><span class="val">{{ currentUser.level }}</span></div>
+        </div>
+        <div class="info-row">
+          <i class="pi pi-pen-to-square"></i>
+          <div><span class="lbl">Autor / Equipo</span><span class="val">{{ currentUser.author }}</span></div>
+        </div>
+        <div class="info-row">
+          <i class="pi pi-ticket"></i>
+          <div><span class="lbl">Tickets Asignados</span><span class="val">{{ currentUser.tickets }}</span></div>
+        </div>
+        <div class="info-row">
+          <i class="pi pi-calendar"></i>
+          <div><span class="lbl">Miembro desde</span><span class="val">{{ currentUser.joinDate }}</span></div>
+        </div>
+      </div>
+
+      <p-divider />
+
+      <div class="section-block">
+        <span class="lbl block-label"><i class="pi pi-users"></i> Integrantes</span>
+        <div class="members-list">
+          <div class="member-chip" *ngFor="let m of currentUser.members">
+            <span class="member-dot"></span>{{ m }}
+          </div>
+        </div>
+      </div>
+
+      <p-divider />
+
+      <div class="section-block">
+        <span class="lbl block-label"><i class="pi pi-align-left"></i> Descripción</span>
+        <p class="desc-text" *ngIf="!editMode">{{ currentUser.description }}</p>
+        <textarea *ngIf="editMode" pTextarea
+                  [formControl]="$any(form.get('description'))"
+                  rows="3" class="w-full"
+                  placeholder="Descripción del usuario..."></textarea>
+      </div>
+
+    </div>
+
+    <!-- Columna derecha: formulario -->
+    <div class="profile-card right-card">
+      <h3 class="section-title"><i class="pi pi-id-card"></i> Información Personal</h3>
+
+      <form [formGroup]="form">
+        <div class="form-grid">
+
+          <div class="field">
+            <label>Nombre Completo</label>
+            <input pInputText formControlName="fullName" class="w-full"
+                   [class.p-invalid]="isInvalid('fullName')"
+                   [readOnly]="!editMode" placeholder="Nombre y Apellidos" />
+            <small class="p-error" *ngIf="isInvalid('fullName')">Solo letras.</small>
+          </div>
+
+          <div class="field">
+            <label>Nombre de Usuario</label>
+            <input pInputText formControlName="username" class="w-full"
+                   [class.p-invalid]="isInvalid('username')"
+                   [readOnly]="!editMode" placeholder="usuario123" />
+            <small class="p-error" *ngIf="isInvalid('username')">Mínimo 3 caracteres.</small>
+          </div>
+
+          <div class="field">
+            <label>Correo Electrónico</label>
+            <input pInputText formControlName="email" class="w-full"
+                   [class.p-invalid]="isInvalid('email')"
+                   [readOnly]="!editMode" placeholder="ejemplo@gmail.com" />
+            <small class="p-error"
+              *ngIf="f['email'].errors?.['invalidDomain'] && (f['email'].dirty || submitted)">
+              Usa @gmail.com, @hotmail.com o @outlook.com
+            </small>
+          </div>
+
+          <div class="field">
+            <label>Teléfono</label>
+            <input pInputText formControlName="phone" class="w-full"
+                   [class.p-invalid]="isInvalid('phone')"
+                   [readOnly]="!editMode"
+                   (input)="filtrarNumeros($event)" maxlength="10"
+                   placeholder="5512345678" />
+            <small class="p-error" *ngIf="isInvalid('phone')">10 dígitos exactos.</small>
+          </div>
+
+          <div class="field">
+            <label>Fecha de Nacimiento</label>
+            <p-datepicker formControlName="birthDate" [maxDate]="maxDate"
+                          dateFormat="dd/mm/yy" styleClass="w-full" inputStyleClass="w-full"
+                          [class.p-invalid]="isInvalid('birthDate')"
+                          [disabled]="!editMode" />
+          </div>
+
+        </div>
+
+        <!-- Contraseña solo en modo edición -->
+        <div *ngIf="editMode">
+          <p-divider align="left">
+            <span class="divider-lbl"><i class="pi pi-lock"></i> Cambiar Contraseña (opcional)</span>
+          </p-divider>
+
+          <div class="form-grid">
+            <div class="field">
+              <label>Nueva Contraseña</label>
+              <p-password formControlName="password" [toggleMask]="true" [feedback]="false"
+                          styleClass="w-full" inputStyleClass="w-full"
+                          (onInput)="onPasswordInput()"
+                          [class.p-invalid]="isInvalid('password')" />
+              <div class="s-bar" *ngIf="f['password'].value">
+                <div class="fill" [style.width.%]="pwFortaleza" [style.background]="pwColor"></div>
+              </div>
+              <ng-container *ngIf="isInvalid('password')">
+                <small class="p-error" *ngIf="f['password'].errors?.['minLen']">- Mínimo 10 caracteres.</small>
+                <small class="p-error" *ngIf="f['password'].errors?.['sinSim']">- Incluye un símbolo (!@#$).</small>
+                <small class="p-error" *ngIf="f['password'].errors?.['sinMay']">- Incluye una Mayúscula.</small>
+              </ng-container>
+            </div>
+
+            <div class="field">
+              <label>Confirmar Contraseña</label>
+              <p-password formControlName="confirmPassword" [toggleMask]="true" [feedback]="false"
+                          styleClass="w-full" inputStyleClass="w-full"
+                          [class.p-invalid]="form.errors?.['noCoinciden'] && f['confirmPassword'].dirty" />
+              <small class="p-error"
+                *ngIf="form.errors?.['noCoinciden'] && (f['confirmPassword'].dirty || submitted)">
+                Las contraseñas no coinciden.
+              </small>
+            </div>
+          </div>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>

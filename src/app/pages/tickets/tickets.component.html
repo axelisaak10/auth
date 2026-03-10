@@ -1,0 +1,173 @@
+<div class="tickets-wrapper">
+
+  <!-- Header -->
+  <div class="tickets-header">
+    <div>
+      <h1>Tickets</h1>
+      @if (canViewAll()) {
+        <p>Vista de administrador — todos los tickets</p>
+      } @else {
+        <p>Mis tickets asignados · <strong>{{ auth.currentUser()?.area }}</strong></p>
+      }
+    </div>
+    <div class="header-right">
+      @if (canEdit()) {
+        <button class="btn-new" (click)="openCreate()">
+          <i class="pi pi-plus"></i> Nuevo ticket
+        </button>
+      }
+      <div class="role-badge" [class.admin]="canViewAll()">
+        <i class="pi" [ngClass]="canViewAll() ? 'pi-shield' : 'pi-user'"></i>
+        {{ canViewAll() ? 'Administrador' : 'Usuario' }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Tablas por grupo -->
+  @for (group of ticketsByGroup(); track group.grupo) {
+    <div class="group-section">
+      <div class="group-header">
+        <i class="pi pi-folder"></i>
+        {{ group.grupo }}
+        <span class="group-count">{{ group.tickets.length }}</span>
+      </div>
+      <div class="table-card">
+        <table class="tickets-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Título</th>
+              <th>Estado</th>
+              @if (canViewAll()) {
+                <th>Asignado a</th>
+              }
+              @if (canEdit() || canEditState() || canDelete()) {
+                <th>Acciones</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (ticket of group.tickets; track ticket.id) {
+              <tr>
+                <td class="id-cell">{{ ticket.id }}</td>
+                <td class="titulo-cell">{{ ticket.titulo }}</td>
+                <td>
+                  <span class="estado-badge" [ngClass]="'estado-' + ticket.estado.replace(' ', '-')">
+                    {{ ticket.estado }}
+                  </span>
+                </td>
+                @if (canViewAll()) {
+                  <td>
+                    <span class="asignado-nombre">{{ ticket.asignadoA }}</span>
+                    @if (areaDeUsuario(ticket.asignadoA)) {
+                      <span class="asignado-area">{{ areaDeUsuario(ticket.asignadoA) }}</span>
+                    }
+                  </td>
+                }
+                @if (canEdit() || canEditState() || canDelete()) {
+                  <td class="actions-cell">
+                    @if (canEdit() || canEditState()) {
+                      <button class="btn-icon edit" (click)="openEdit(ticket)" title="Editar">
+                        <i class="pi pi-pencil"></i>
+                      </button>
+                    }
+                    @if (canDelete()) {
+                      <button class="btn-icon delete" (click)="deleteTicket(ticket.id)" title="Eliminar">
+                        <i class="pi pi-trash"></i>
+                      </button>
+                    }
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  } @empty {
+    <div class="empty-state">
+      <i class="pi pi-inbox"></i>
+      <p>No hay tickets disponibles</p>
+    </div>
+  }
+
+  <!-- Sheet -->
+  @if (editingTicket) {
+    <div class="sheet-overlay" (click)="cancelEdit()"></div>
+    <div class="sheet">
+
+      <div class="sheet-header">
+        <div class="sheet-title">
+          <i class="pi" [ngClass]="isNewTicket ? 'pi-plus-circle' : 'pi-pencil'"></i>
+          {{ isNewTicket ? 'Nuevo ticket' : (canEdit() ? 'Editar ticket' : 'Editar estado') }}
+        </div>
+        <button class="sheet-close" (click)="cancelEdit()">
+          <i class="pi pi-times"></i>
+        </button>
+      </div>
+
+      <div class="sheet-body">
+
+        @if (!isNewTicket) {
+          <div class="ticket-chip">#{{ editingTicket.id }}</div>
+        }
+
+        @if (canEdit()) {
+          <div class="edit-field">
+            <label class="field-label">Título</label>
+            <input type="text" [(ngModel)]="editingTicket.titulo" class="edit-input" placeholder="Título del ticket" />
+          </div>
+          <div class="edit-field">
+            <label class="field-label">Descripción</label>
+            <textarea [(ngModel)]="editingTicket.descripcion" class="edit-input edit-textarea" rows="4" placeholder="Describe el problema o tarea..."></textarea>
+          </div>
+          <div class="edit-field">
+            <label class="field-label">Grupo</label>
+            <select [(ngModel)]="editingTicket.grupo" class="edit-input edit-select">
+              @for (g of grupos; track g) {
+                <option [value]="g">{{ g }}</option>
+              }
+            </select>
+          </div>
+          <div class="edit-field">
+            <label class="field-label">Asignado a</label>
+            <select [(ngModel)]="editingTicket.asignadoA" class="edit-input edit-select">
+              <option value="">— Sin asignar —</option>
+              @for (u of usuarios; track u.username) {
+                <option [value]="u.username">{{ u.username }} · {{ u.area }}</option>
+              }
+            </select>
+          </div>
+        } @else {
+          <p class="sheet-titulo">{{ editingTicket.titulo }}</p>
+          <div class="edit-field">
+            <label class="field-label">Descripción</label>
+            <p class="sheet-descripcion">{{ editingTicket.descripcion }}</p>
+          </div>
+        }
+
+        <div class="edit-field">
+          <label class="field-label">Estado</label>
+          <div class="estado-options">
+            @for (e of estados; track e) {
+              <label class="estado-option" [class.selected]="editEstado === e">
+                <input type="radio" [value]="e" [(ngModel)]="editEstado" />
+                <span class="estado-badge" [ngClass]="'estado-' + e.replace(' ', '-')">{{ e }}</span>
+              </label>
+            }
+          </div>
+        </div>
+
+      </div>
+
+      <div class="sheet-footer">
+        <button class="btn-cancel" (click)="cancelEdit()">Cancelar</button>
+        <button class="btn-save" (click)="saveEdit()">
+          {{ isNewTicket ? 'Crear ticket' : 'Guardar cambios' }}
+        </button>
+      </div>
+
+    </div>
+  }
+
+</div>

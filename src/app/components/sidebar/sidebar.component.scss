@@ -1,0 +1,107 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.sidebar {
+  width: 240px;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0f3460 0%, #533483 100%);
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s ease;
+  position: relative;
+
+  &.collapsed {
+    width: 68px;
+    .app-name, .nav-label, .version-badge { display: none; }
+    .sidebar-header { justify-content: center; }
+    .toggle-btn { position: absolute; right: -12px; top: 22px; }
+  }
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  position: relative;
+
+  .logo-icon { font-size: 1.6rem; color: white; flex-shrink: 0; }
+  .app-name  { font-size: 1.1rem; font-weight: 700; color: white; letter-spacing: 0.5px; flex: 1; }
+}
+
+.toggle-btn {
+  background: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #0f3460;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  flex-shrink: 0;
+  transition: background 0.2s;
+  &:hover { background: #e0e7ff; }
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 16px 8px;
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  li.active .nav-item {
+    background: rgba(255,255,255,0.2) !important;
+    color: white !important;
+  }
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  color: rgba(255,255,255,0.75);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s;
+  font-size: 0.92rem;
+  font-weight: 500;
+  white-space: nowrap;
+
+  .pi { font-size: 1.1rem; flex-shrink: 0; }
+  &:hover { background: rgba(255,255,255,0.12); color: white; }
+}
+
+.sidebar-footer {
+  padding: 16px 8px 12px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+
+  .logout {
+    color: rgba(255,180,180,0.9);
+    &:hover { background: rgba(239,68,68,0.2); color: #fca5a5; }
+  }
+}
+
+.version-badge {
+  text-align: center;
+  margin-top: 10px;
+  span {
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 0.5px;
+  }
+}

@@ -1,0 +1,99 @@
+.auth-wrapper {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.auth-card {
+  background: rgba(255,255,255,0.97);
+  border-radius: 20px;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+  overflow: hidden;
+  animation: slideUp 0.4s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.card-header {
+  background: linear-gradient(135deg, #0f3460, #533483);
+  padding: 28px 36px;
+  text-align: center;
+  color: white;
+
+  .logo-icon { font-size: 2.8rem; display: block; margin-bottom: 8px; }
+}
+
+::ng-deep {
+  .p-tabs { border: none !important; }
+
+  .p-tablist {
+    background: #f3f4f6 !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    padding: 0 !important;
+    display: flex;
+  }
+
+  .p-tab {
+    flex: 1;
+    justify-content: center;
+    font-weight: 600;
+    color: #6b7280 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 14px !important;
+    background: transparent !important;
+    transition: all 0.25s;
+
+    &:hover { background: #e5e7eb !important; color: #374151 !important; }
+  }
+
+  .p-tab[data-p-active="true"] {
+    color: #0f3460 !important;
+    border-bottom: 3px solid #0f3460 !important;
+    background: white !important;
+  }
+
+  .p-tabpanels {
+    padding: 24px 32px 32px !important;
+    max-height: 72vh;
+    overflow-y: auto;
+    background: white !important;
+
+    &::-webkit-scrollbar { width: 5px; }
+    &::-webkit-scrollbar-thumb { background: #0f3460; border-radius: 10px; }
+  }
+
+  .btn-auth {
+    background: linear-gradient(135deg, #0f3460, #533483) !important;
+    border: none !important;
+    border-radius: 8px !important;
+    font-weight: 700 !important;
+    padding: 12px 20px !important;
+    font-size: 0.97rem !important;
+    width: 100%;
+    margin-top: 8px;
+
+    &:hover {
+      background: linear-gradient(135deg, #0a2540, #3d2469) !important;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(15,52,96,0.35) !important;
+    }
+    &:disabled { opacity: 0.5 !important; cursor: not-allowed !important; }
+  }
+
+  .p-inputtext {
+    border-radius: 8px !important;
+    background: #f9fafb !important;
+    width: 100%;
+    &:focus {
+      border-color: #0f3460 !important;
+      box-shadow: 0 0 0 3px rgba(15,52,96,0.12) !important;
+    }
+  }
+
+  .p-password { width: 100%; display: block; }
+  .p-password-input { width: 100% !important; }
+}
