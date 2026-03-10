@@ -32,6 +32,14 @@ export const routes: Routes = [
                 path: 'group',
                 loadComponent: () => import('./peges/group/group').then(m => m.Group),
             },
+            {
+                path: 'tickets',
+                loadComponent: () => import('./peges/tickets/tickets').then(m => m.Tickets),
+            },
+            {
+                path: 'gestion-user',
+                loadComponent: () => import('./gestion-user/gestion-user').then(m => m.GestionUser),
+            },
         ],
     },
 ];

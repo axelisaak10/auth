@@ -1,0 +1,59 @@
+/* ===== Black Theme Dialog Override ===== */
+:host ::ng-deep .black-theme-dialog.p-dialog {
+    background: #000000 !important;
+    border: 1px solid #333333 !important;
+    border-radius: 12px !important;
+    overflow: hidden;
+}
+
+:host ::ng-deep .black-theme-dialog .p-dialog-header {
+    background: #000000 !important;
+    color: #ffffff !important;
+    border-top-left-radius: 12px !important;
+    border-top-right-radius: 12px !important;
+    border-bottom: 1px solid #222;
+}
+
+:host ::ng-deep .black-theme-dialog .p-dialog-content {
+    background: #000000 !important;
+    color: #ffffff !important;
+}
+
+:host ::ng-deep .black-theme-dialog .p-dialog-footer {
+    background: #000000 !important;
+    color: #ffffff !important;
+    border-bottom-left-radius: 12px !important;
+    border-bottom-right-radius: 12px !important;
+    border-top: 1px solid #222;
+}
+
+:host ::ng-deep .black-theme-dialog .p-dialog-header-close {
+    color: #ffffff !important;
+}
+:host ::ng-deep .black-theme-dialog .p-dialog-header-close:hover {
+    background: #333333 !important;
+    color: #ffffff !important;
+}
+
+.edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding-top: 1rem;
+}
+
+.edit-form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.edit-form-row label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #e2e8f0;
+}
+
+:host ::ng-deep .select-with-padding .p-select-label {
+    padding-left: 2.5rem;
+}

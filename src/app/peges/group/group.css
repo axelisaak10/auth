@@ -107,65 +107,7 @@
     letter-spacing: 0.06em;
 }
 
-/* ===== Toolbar ===== */
-:host ::ng-deep .group-toolbar.p-toolbar {
-    border-radius: 16px;
-    background: linear-gradient(135deg, #fafaff, #f5f3ff);
-    border: 1px solid #e9e5f5;
-    box-shadow: 0 2px 12px rgba(139, 92, 246, 0.06);
-    padding: 0.8rem 1.25rem;
-}
 
-.toolbar-title {
-    font-size: 1rem;
-    font-weight: 700;
-    color: #7c3aed;
-    letter-spacing: -0.01em;
-}
-
-/* ===== Table ===== */
-:host ::ng-deep .group-table .p-datatable-header-row>tr>th {
-    background: linear-gradient(135deg, #7c3aed, #8b5cf6, #a78bfa) !important;
-    color: #fff !important;
-    font-weight: 700;
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    border: none !important;
-    padding: 0.9rem 1rem;
-}
-
-:host ::ng-deep .group-table .p-datatable-header-row>tr>th .p-sorticon {
-    color: rgba(255, 255, 255, 0.65) !important;
-}
-
-:host ::ng-deep .group-table .p-datatable-table-container {
-    border-radius: 16px;
-    overflow: hidden;
-    border: 1px solid #e9e5f5;
-    box-shadow: 0 4px 24px rgba(139, 92, 246, 0.08);
-}
-
-:host ::ng-deep .group-table .p-datatable-tbody>tr {
-    transition: background-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-:host ::ng-deep .group-table .p-datatable-tbody>tr:hover {
-    background: linear-gradient(90deg, #faf5ff, #f5f3ff) !important;
-}
-
-:host ::ng-deep .group-table .p-datatable-tbody>tr>td {
-    padding: 0.85rem 1rem;
-    font-size: 0.87rem;
-    color: #5b5e76;
-    border-bottom: 1px solid #f1eef9;
-}
-
-:host ::ng-deep .group-table .p-paginator {
-    border: none;
-    padding: 0.75rem;
-    background: #fafaff;
-}
 
 /* ===== Cell Styles ===== */
 .authority-cell {
@@ -498,4 +440,39 @@
     .toolbar-title {
         font-size: 0.88rem;
     }
+}
+
+/* ===== Black Theme Dialog Override ===== */
+:host ::ng-deep .black-theme-dialog.p-dialog {
+    background: #000000 !important;
+    border: 1px solid #333333 !important;
+    border-radius: 12px !important;
+    overflow: hidden;
+}
+
+:host ::ng-deep .black-theme-dialog .p-dialog-header {
+    background: #000000 !important;
+    color: #ffffff !important;
+    border-top-left-radius: 12px !important;
+    border-top-right-radius: 12px !important;
+}
+
+:host ::ng-deep .black-theme-dialog .p-dialog-content {
+    background: #000000 !important;
+    color: #ffffff !important;
+}
+
+:host ::ng-deep .black-theme-dialog .p-dialog-footer {
+    background: #000000 !important;
+    color: #ffffff !important;
+    border-bottom-left-radius: 12px !important;
+    border-bottom-right-radius: 12px !important;
+}
+
+:host ::ng-deep .black-theme-dialog .p-dialog-header-close {
+    color: #ffffff !important;
+}
+:host ::ng-deep .black-theme-dialog .p-dialog-header-close:hover {
+    background: #333333 !important;
+    color: #ffffff !important;
 }

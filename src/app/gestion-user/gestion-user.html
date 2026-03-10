@@ -1,0 +1,88 @@
+<div class="profile-container">
+    <!-- Confirm Dialog -->
+    <p-confirmDialog />
+    
+    <!-- Management Section (Basic Admins for Super Admin) -->
+    <ng-container *hasPermission="'MANAGE_BASIC_ADMINS'">
+
+        <!-- Basic Admins Management for Super Admin -->
+        <p-card header="Gestión de Administradores Básicos" id="admins-section" styleClass="profile-details-card" [style]="{'margin-top': '2rem'}">
+            <p-toolbar styleClass="mb-4">
+                <ng-template #start>
+                    <p-button label="Nuevo Admin Básico" icon="pi pi-user-plus" severity="help" (onClick)="openAddBasicAdmin()" />
+                </ng-template>
+            </p-toolbar>
+
+            <p-table [value]="basicAdmins" [paginator]="true" [rows]="5" [tableStyle]="{ 'min-width': '50rem' }">
+                <ng-template #header>
+                    <tr>
+                        <th pSortableColumn="usuario">Usuario <p-sortIcon field="usuario" /></th>
+                        <th pSortableColumn="nombre">Nombre <p-sortIcon field="nombre" /></th>
+                        <th pSortableColumn="email">Email <p-sortIcon field="email" /></th>
+                        <th>Acciones</th>
+                    </tr>
+                </ng-template>
+                <ng-template #body let-ba>
+                    <tr>
+                        <td><p-tag severity="info" [value]="ba.usuario"></p-tag></td>
+                        <td>{{ ba.nombre }}</td>
+                        <td>{{ ba.email }}</td>
+                        <td>
+                            <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info" (onClick)="editBasicAdmin(ba)" />
+                            <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" (onClick)="deleteBasicAdmin(ba)" />
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </p-card>
+
+        <!-- Basic Admin Edit Dialog -->
+        <p-dialog [(visible)]="showBasicAdminDialog" header="Crear / Editar Admin Básico" [modal]="true" styleClass="black-theme-dialog" [style]="{ width: '450px' }">
+            <div class="edit-form">
+                <div class="edit-form-row">
+                    <label for="ba-usuario">Usuario</label>
+                    <div style="position: relative; display: flex; align-items: center;">
+                        <i class="pi pi-user" style="position: absolute; left: 1rem; color: #a5b4c8; z-index: 1;"></i>
+                        <input id="ba-usuario" pInputText [(ngModel)]="basicAdminData.usuario" class="w-full" style="padding-left: 2.5rem; border-radius: 8px; background: #111; color: #fff; border: 1px solid #333;" placeholder="Ej. usuario_admin" />
+                    </div>
+                </div>
+                <div class="edit-form-row">
+                    <label for="ba-nombre">Nombre</label>
+                    <div style="position: relative; display: flex; align-items: center;">
+                        <i class="pi pi-id-card" style="position: absolute; left: 1rem; color: #a5b4c8; z-index: 1;"></i>
+                        <input id="ba-nombre" pInputText [(ngModel)]="basicAdminData.nombre" class="w-full" style="padding-left: 2.5rem; border-radius: 8px; background: #111; color: #fff; border: 1px solid #333;" placeholder="Nombre completo" />
+                    </div>
+                </div>
+                <div class="edit-form-row">
+                    <label for="ba-email">Email</label>
+                    <div style="position: relative; display: flex; align-items: center;">
+                        <i class="pi pi-envelope" style="position: absolute; left: 1rem; color: #a5b4c8; z-index: 1;"></i>
+                        <input id="ba-email" type="email" pInputText [(ngModel)]="basicAdminData.email" class="w-full" style="padding-left: 2.5rem; border-radius: 8px; background: #111; color: #fff; border: 1px solid #333;" placeholder="correo@ejemplo.com" />
+                    </div>
+                </div>
+                <div class="edit-form-row">
+                    <label for="ba-group">Grupo Asignado (ID)</label>
+                    <div style="position: relative; display: flex; align-items: center; width: 100%;">
+                        <i class="pi pi-users" style="position: absolute; left: 1rem; color: #a5b4c8; z-index: 1;"></i>
+                        <p-select [options]="mockGroups" [(ngModel)]="basicAdminData.groupId" optionLabel="label" optionValue="value" placeholder="Seleccionar Grupo" styleClass="w-full" [style]="{'border-radius': '8px', 'background': '#111', 'border': '1px solid #333', 'width': '100%'}" class="select-with-padding" appendTo="body">
+                            <ng-template let-grp pTemplate="selectedItem">
+                                <div style="color: #fff;">{{ grp.label }}</div>
+                            </ng-template>
+                            <ng-template let-grp pTemplate="item">
+                                <div>{{ grp.label }}</div>
+                            </ng-template>
+                        </p-select>
+                    </div>
+                </div>
+            </div>
+            <ng-template #footer>
+                <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem;">
+                    <p-button label="Cancelar" icon="pi pi-times" [text]="true" [style]="{'border-radius': '8px', 'color': '#a5b4c8'}" (onClick)="showBasicAdminDialog = false" />
+                    <p-button label="Guardar" icon="pi pi-check" [style]="{'border-radius': '8px', 'background': '#fff', 'color': '#000', 'border': 'none'}" (onClick)="saveBasicAdmin()" />
+                </div>
+            </ng-template>
+        </p-dialog>
+
+    </ng-container>
+
+</div>

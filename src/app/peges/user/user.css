@@ -174,86 +174,41 @@
     border: 1px solid #e9e5f5;
 }
 
-/* ===== Edit Dialog Styles ===== */
-:host ::ng-deep .profile-edit-dialog .p-dialog {
-    border-radius: 20px;
-    box-shadow: 0 24px 64px rgba(139, 92, 246, 0.18);
-    border: 1px solid #e9e5f5;
-}
-
-:host ::ng-deep .profile-edit-dialog .p-dialog-header {
-    border-bottom: 1px solid #f1eef9;
-    padding: 1.25rem 1.5rem;
-    background: linear-gradient(135deg, #fafaff, #f5f3ff);
-}
-
-:host ::ng-deep .profile-edit-dialog .p-dialog-title {
-    font-weight: 800;
-    color: #6d28d9;
-    font-size: 1.15rem;
-}
-
-:host ::ng-deep .profile-edit-dialog .p-dialog-content {
-    padding: 1.5rem;
-}
-
-:host ::ng-deep .profile-edit-dialog .p-dialog-footer {
-    border-top: 1px solid #f1eef9;
-    background: #fafaff;
-    padding: 1rem 1.5rem;
-}
-
-.edit-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-}
-
-.edit-form-row {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-}
-
-.edit-form-two {
-    display: flex;
-    gap: 1rem;
-}
-
-.edit-form-col {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-}
-
-.edit-form label {
-    font-size: 0.78rem;
-    font-weight: 700;
-    color: #8b8fa8;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.edit-input {
+/* ===== Inputs Theme (Password/Datepicker Overrides) ===== */
+:host ::ng-deep .black-theme-password,
+:host ::ng-deep .black-theme-datepicker {
+    display: block;
     width: 100%;
 }
 
-:host ::ng-deep .edit-form .p-inputtext {
-    border-radius: 10px;
-    border-color: #e0d4fc;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+:host ::ng-deep .black-theme-password .p-password,
+:host ::ng-deep .black-theme-datepicker .p-datepicker {
+    width: 100%;
 }
 
-:host ::ng-deep .edit-form .p-inputtext:focus {
-    border-color: #a78bfa;
-    box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.2);
+:host ::ng-deep .black-theme-password .p-password-input,
+:host ::ng-deep .black-theme-datepicker .p-inputtext {
+    height: 3rem;
+    background: #000000 !important;
+    color: #ffffff !important;
+    border: 1px solid #404040 !important;
+    border-radius: 8px;
+    padding-left: 2.75rem !important;
+    padding-right: 2.5rem !important;
+    font-size: 1rem;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-.edit-dialog-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.5rem;
+:host ::ng-deep .black-theme-password i.p-password-toggle-mask {
+    color: #737373;
+    right: 1rem;
+}
+
+:host ::ng-deep .black-theme-datepicker .p-datepicker-trigger {
+    background: transparent;
+    border: none;
+    color: #737373;
 }
 
 /* ===== Responsive ===== */

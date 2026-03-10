@@ -12,7 +12,12 @@ import { DatePicker } from 'primeng/datepicker';
 import { Password } from 'primeng/password';
 import { ConfirmDialog } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
-import { AuthService, UserSession } from '../../services/auth.service';
+import { AuthService } from '../../services/auth.service';
+import { PermissionService } from '../../services/permission.service';
+import { UserSession } from '../../models/types';
+import { HasPermissionDirective } from '../../directiva/directiva';
+import { TableModule } from 'primeng/table';
+import { ToolbarModule } from 'primeng/toolbar';
 
 @Component({
   selector: 'app-user',
@@ -29,6 +34,9 @@ import { AuthService, UserSession } from '../../services/auth.service';
     DatePicker,
     Password,
     ConfirmDialog,
+    HasPermissionDirective,
+    TableModule,
+    ToolbarModule
   ],
   providers: [ConfirmationService],
   templateUrl: './user.html',
@@ -48,6 +56,7 @@ export class User {
 
   constructor(
     private authService: AuthService,
+    private permissionService: PermissionService,
     private confirmationService: ConfirmationService,
   ) {
     this.user = this.authService.getUser();
@@ -71,11 +80,11 @@ export class User {
     return {
       email: '',
       nombre: '',
-      rol: '',
       usuario: '',
       telefono: '',
       direccion: '',
       fechaNacimiento: '',
+      permissions: []
     };
   }
 
@@ -139,4 +148,5 @@ export class User {
   reactivateAccount(): void {
     this.accountSuspended = false;
   }
+
 }

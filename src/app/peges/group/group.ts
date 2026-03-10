@@ -1,28 +1,31 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Card } from 'primeng/card';
 import { TableModule } from 'primeng/table';
+import { CardModule } from 'primeng/card';
 import { Dialog } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
 import { Textarea } from 'primeng/textarea';
 import { Tag } from 'primeng/tag';
 import { Toolbar } from 'primeng/toolbar';
-import { InputNumber } from 'primeng/inputnumber';
-import { Select } from 'primeng/select';
 import { ConfirmDialog } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
 import { Tooltip } from 'primeng/tooltip';
+import { HasPermissionDirective } from '../../directiva/directiva';
+import { PermissionService } from '../../services/permission.service';
+import { AuthService } from '../../services/auth.service';
 
 export interface GroupItem {
-  id: number;
+  id: string;
   nivel: string;
   autoridad: string;
   nombre: string;
   integrantes: number;
   tickets: number;
   descripcion: string;
+  adminId: string; // user.usuario of the basic admin
+  userIds: string[];
 }
 
 @Component({
@@ -30,75 +33,59 @@ export interface GroupItem {
   imports: [
     CommonModule,
     FormsModule,
-    Card,
     TableModule,
+    CardModule,
     Dialog,
     ButtonModule,
     InputText,
     Textarea,
     Tag,
     Toolbar,
-    InputNumber,
-    Select,
     ConfirmDialog,
     Tooltip,
+    HasPermissionDirective
   ],
   providers: [ConfirmationService],
   templateUrl: './group.html',
   styleUrl: './group.css',
 })
-export class Group {
-  groups: GroupItem[] = [
+export class Group implements OnInit {
+  // Static mock groups
+  allGroups: GroupItem[] = [
     {
-      id: 1,
+      id: 'group-1',
       nivel: 'Alto',
       autoridad: 'Administrador General',
       nombre: 'Seguridad TI',
-      integrantes: 8,
-      tickets: 14,
+      integrantes: 4,
+      tickets: 5,
       descripcion: 'Grupo encargado de la seguridad informática y auditorías.',
+      adminId: 'admin_carlos',
+      userIds: ['normal_user', 'maria_qa', 'pedro_dev']
     },
     {
-      id: 2,
+      id: 'group-2',
       nivel: 'Medio',
       autoridad: 'Coordinador',
       nombre: 'Desarrollo Web',
-      integrantes: 12,
-      tickets: 27,
-      descripcion: 'Equipo de desarrollo de aplicaciones web y APIs.',
-    },
-    {
-      id: 3,
-      nivel: 'Bajo',
-      autoridad: 'Supervisor',
-      nombre: 'Soporte Técnico',
-      integrantes: 5,
-      tickets: 42,
-      descripcion: 'Atención y resolución de incidencias técnicas.',
-    },
-    {
-      id: 4,
-      nivel: 'Alto',
-      autoridad: 'Director',
-      nombre: 'Infraestructura',
-      integrantes: 6,
-      tickets: 9,
-      descripcion: 'Gestión de servidores, redes y servicios cloud.',
-    },
-    {
-      id: 5,
-      nivel: 'Medio',
-      autoridad: 'Líder de Proyecto',
-      nombre: 'QA & Testing',
       integrantes: 4,
-      tickets: 18,
-      descripcion: 'Pruebas de calidad y aseguramiento de software.',
-    },
+      tickets: 10,
+      descripcion: 'Equipo de desarrollo de APIs.',
+      adminId: 'admin_dev',
+      userIds: []
+    }
   ];
 
+  groups: GroupItem[] = [];
+  
   showDialog = false;
   editMode = false;
   selectedGroup: GroupItem = this.emptyGroup();
+
+  showMembersDialog = false;
+  showWorkspaceDialog = false;
+  activeGroupForMembers: GroupItem | null = null;
+  newUserIdentifier = '';
 
   nivelesOptions = [
     { label: 'Alto', value: 'Alto' },
@@ -106,17 +93,42 @@ export class Group {
     { label: 'Bajo', value: 'Bajo' },
   ];
 
-  constructor(private confirmationService: ConfirmationService) { }
+  constructor(
+    private confirmationService: ConfirmationService,
+    private permissionService: PermissionService,
+    private authService: AuthService
+  ) { }
+
+  ngOnInit() {
+    this.loadGroups();
+  }
+
+  loadGroups() {
+    const user = this.authService.getUser();
+    if (!user) return;
+
+    if (this.permissionService.hasPermission('MANAGE_GROUPS')) {
+      // Super admin sees all groups
+      this.groups = [...this.allGroups];
+    } else if (this.permissionService.hasPermission('VIEW_OWN_GROUP') && user.groupId) {
+      // Basic admin or normal user sees only their group
+      this.groups = this.allGroups.filter(g => g.id === user.groupId);
+    } else {
+      this.groups = [];
+    }
+  }
 
   emptyGroup(): GroupItem {
     return {
-      id: 0,
+      id: '',
       nivel: 'Medio',
       autoridad: '',
       nombre: '',
       integrantes: 0,
       tickets: 0,
       descripcion: '',
+      adminId: '',
+      userIds: []
     };
   }
 
@@ -134,16 +146,67 @@ export class Group {
 
   saveGroup(): void {
     if (this.editMode) {
-      const index = this.groups.findIndex((g) => g.id === this.selectedGroup.id);
+      const index = this.allGroups.findIndex((g) => g.id === this.selectedGroup.id);
       if (index !== -1) {
-        this.groups[index] = { ...this.selectedGroup };
+        this.allGroups[index] = { ...this.selectedGroup };
       }
     } else {
-      const maxId = this.groups.reduce((max, g) => Math.max(max, g.id), 0);
-      this.selectedGroup.id = maxId + 1;
-      this.groups = [...this.groups, { ...this.selectedGroup }];
+      this.selectedGroup.id = 'group-' + (this.allGroups.length + 1);
+      this.allGroups.push({ ...this.selectedGroup });
     }
+    this.loadGroups();
     this.showDialog = false;
+  }
+
+  editWorkspace(group: GroupItem): void {
+    this.selectedGroup = { ...group };
+    this.showWorkspaceDialog = true;
+  }
+
+  saveWorkspace(): void {
+    const index = this.allGroups.findIndex((g) => g.id === this.selectedGroup.id);
+    if (index !== -1) {
+      // Basic admin can only edit name and description
+      this.allGroups[index].nombre = this.selectedGroup.nombre;
+      this.allGroups[index].descripcion = this.selectedGroup.descripcion;
+    }
+    this.loadGroups();
+    this.showWorkspaceDialog = false;
+  }
+
+  openManageMembers(group: GroupItem): void {
+    this.activeGroupForMembers = group;
+    this.newUserIdentifier = '';
+    this.showMembersDialog = true;
+  }
+
+  addUserToGroup(): void {
+    if (!this.activeGroupForMembers || !this.newUserIdentifier.trim()) return;
+
+    // Simulate adding user
+    const groupId = this.activeGroupForMembers.id;
+    const groupInAll = this.allGroups.find(g => g.id === groupId);
+    if (groupInAll) {
+      if (!groupInAll.userIds) groupInAll.userIds = [];
+      groupInAll.userIds.push(this.newUserIdentifier.trim());
+      groupInAll.integrantes = groupInAll.userIds.length + 1; // +1 for basic admin
+    }
+    
+    this.newUserIdentifier = '';
+    this.loadGroups();
+    this.activeGroupForMembers = this.groups.find(g => g.id === groupId) || null;
+  }
+
+  removeUserFromGroup(identifier: string): void {
+    if (!this.activeGroupForMembers) return;
+    const groupId = this.activeGroupForMembers.id;
+    const groupInAll = this.allGroups.find(g => g.id === groupId);
+    if (groupInAll) {
+      groupInAll.userIds = groupInAll.userIds.filter(id => id !== identifier);
+      groupInAll.integrantes = groupInAll.userIds.length + 1;
+    }
+    this.loadGroups();
+    this.activeGroupForMembers = this.groups.find(g => g.id === groupId) || null;
   }
 
   deleteGroup(group: GroupItem): void {
@@ -155,7 +218,8 @@ export class Group {
       rejectLabel: 'Cancelar',
       acceptButtonStyleClass: 'p-button-danger',
       accept: () => {
-        this.groups = this.groups.filter((g) => g.id !== group.id);
+        this.allGroups = this.allGroups.filter((g) => g.id !== group.id);
+        this.loadGroups();
       },
     });
   }
