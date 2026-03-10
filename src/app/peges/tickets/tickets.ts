@@ -185,6 +185,14 @@ export class Tickets implements OnInit {
     this.showUserDialog = true;
   }
 
+  onTicketClick(t: Ticket) {
+    if (this.permissionService.hasPermission('EDIT_TICKETS_ALL')) {
+      this.editTicket(t);
+    } else if (this.permissionService.hasPermission('EDIT_TICKET_STATUS')) {
+      this.openModalUser(t);
+    }
+  }
+
   saveTicket() {
     const user = this.authService.getUser();
     const timestamp = new Date().toLocaleString();

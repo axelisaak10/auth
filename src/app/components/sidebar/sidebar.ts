@@ -17,11 +17,16 @@ export class Sidebar {
 
   get menuItems(): { label: string, icon: string, route: string, fragment?: string }[] {
     const isSuperAdmin = this.authService.getUser()?.usuario === 'super_admin';
-    const items: { label: string, icon: string, route: string, fragment?: string }[] = [
-      { label: 'Dashboard', icon: 'pi pi-home', route: '/home' },
-      { label: 'Usuarios', icon: 'pi pi-users', route: '/home/user' },
-      { label: 'Grupos', icon: 'pi pi-th-large', route: '/home/group' },
-    ];
+    const items: { label: string, icon: string, route: string, fragment?: string }[] = [];
+    
+    if (isSuperAdmin) {
+      items.push({ label: 'Dashboard Global', icon: 'pi pi-home', route: '/home' });
+    } else {
+      items.push({ label: 'Dashboard Grupo', icon: 'pi pi-chart-pie', route: '/home/dashboard-group' });
+    }
+
+    items.push({ label: 'Usuarios', icon: 'pi pi-users', route: '/home/user' });
+    items.push({ label: 'Grupos', icon: 'pi pi-th-large', route: '/home/group' });
     
     if (!isSuperAdmin) {
       items.push({ label: 'Tickets', icon: 'pi pi-ticket', route: '/home/tickets' });
