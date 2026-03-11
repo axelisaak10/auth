@@ -5,12 +5,14 @@ import { MessageService } from 'primeng/api';
 import { InputText } from 'primeng/inputtext';
 import { Password } from 'primeng/password';
 import { Button } from 'primeng/button';
+import { Toast } from 'primeng/toast';
 import { AuthService } from '../auth/auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, InputText, Password, Button],
+  imports: [CommonModule, FormsModule, InputText, Password, Button, Toast],
+  providers: [MessageService],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
@@ -35,7 +37,7 @@ export class LoginComponent {
     const ok = this.auth.login(this.username, this.password);
     if (ok) {
       const user = this.auth.currentUser();
-      this.msg.add({ severity: 'success', summary: '¡Bienvenido!', detail: `Sesión iniciada como ${user?.username} (${user?.role})` });
+      this.msg.add({ severity: 'success', summary: '¡Bienvenido!', detail: `Sesión iniciada como ${user?.username}` });
       setTimeout(() => this.loginSuccess.emit(), 800);
     } else {
       this.usernameError = 'Usuario o contraseña incorrectos';

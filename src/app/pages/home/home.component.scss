@@ -147,3 +147,137 @@
   .activity-text { font-size: 0.9rem; color: #374151; font-weight: 500; }
   .activity-time { font-size: 0.78rem; color: #94a3b8; margin-top: 2px; }
 }
+
+// ── LLM badge ────────────────────────────────────────────────
+.llm-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: monospace;
+  background: linear-gradient(135deg, #0f3460, #533483);
+  color: #fff;
+  margin-bottom: 20px;
+  opacity: 0.85;
+  .pi { font-size: 0.8rem; }
+}
+
+// ── Groups grid ──────────────────────────────────────────────
+.groups-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.group-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 18px 20px;
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+
+  &:hover {
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+    border-color: var(--accent, #6366f1);
+  }
+}
+
+.group-icon {
+  width: 48px; height: 48px; border-radius: 12px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  .pi { font-size: 1.4rem; }
+  &.sm { width: 38px; height: 38px; border-radius: 9px; .pi { font-size: 1rem; } }
+}
+
+.group-info {
+  flex: 1; display: flex; flex-direction: column; gap: 2px;
+}
+.group-name    { font-weight: 700; font-size: 0.95rem; color: #1e293b; }
+.group-desc    { font-size: 0.78rem; color: #64748b; }
+.group-members { font-size: 0.72rem; color: #94a3b8; display: flex; align-items: center; gap: 4px; margin-top: 4px; }
+.group-arrow   { color: #cbd5e1; font-size: 0.9rem; }
+
+.empty-groups {
+  text-align: center; padding: 60px 20px; color: #94a3b8;
+  .pi { font-size: 2.5rem; display: block; margin-bottom: 12px; }
+  p { margin: 0; }
+}
+
+// ── Group dashboard ──────────────────────────────────────────
+.group-dashboard-header {
+  display: flex; align-items: center; gap: 14px;
+  background: linear-gradient(135deg, #0f3460, #533483);
+  border-radius: 16px; padding: 22px 28px; margin-bottom: 24px; color: #fff;
+
+  h1 { margin: 0 0 2px; font-size: 1.3rem; font-weight: 700; }
+  p  { margin: 0; opacity: 0.8; font-size: 0.85rem; }
+}
+
+.back-btn {
+  width: 36px; height: 36px; border-radius: 50%; border: none; flex-shrink: 0;
+  background: rgba(255,255,255,0.2); color: #fff; cursor: pointer; display: flex;
+  align-items: center; justify-content: center;
+  &:hover { background: rgba(255,255,255,0.35); }
+}
+
+.btn-create-ticket {
+  margin-left: auto; display: flex; align-items: center; gap: 6px;
+  padding: 9px 18px; border-radius: 10px; border: none;
+  background: rgba(255,255,255,0.2); color: #fff; cursor: pointer; font-weight: 600;
+  font-size: 0.85rem; white-space: nowrap;
+  &:hover { background: rgba(255,255,255,0.35); }
+}
+
+// ── Kanban stats ─────────────────────────────────────────────
+.kanban-stats {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 8px;
+
+  @media (max-width: 900px) { grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 500px) { grid-template-columns: repeat(2, 1fr); }
+}
+
+.kstat-card {
+  background: #fff; border-radius: 12px; padding: 16px;
+  border: 1px solid #e2e8f0; border-top: 4px solid;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.kstat-icon  { font-size: 1.1rem; }
+.kstat-count { font-size: 1.8rem; font-weight: 700; line-height: 1; }
+.kstat-label { font-size: 0.72rem; color: #64748b; font-weight: 600; text-align: center; }
+
+// ── Recent list ──────────────────────────────────────────────
+.total-badge {
+  background: #e2e8f0; color: #475569; font-size: 0.72rem; font-weight: 600;
+  padding: 2px 10px; border-radius: 20px;
+}
+
+.recent-list {
+  background: #fff; border-radius: 12px; border: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+.recent-item {
+  display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+  border-bottom: 1px solid #f1f5f9; font-size: 0.85rem;
+  &:last-child { border-bottom: none; }
+  &:hover { background: #f8fafc; }
+}
+
+.recent-id       { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.recent-title    { flex: 1; font-weight: 500; color: #1e293b; }
+.estado-mini     { display: flex; align-items: center; gap: 4px; font-size: 0.75rem; font-weight: 600; .pi { font-size: 0.5rem; } }
+.recent-assignee { color: #64748b; font-size: 0.78rem; min-width: 80px; text-align: right; }
+.no-tickets      { text-align: center; color: #94a3b8; padding: 24px; margin: 0; }

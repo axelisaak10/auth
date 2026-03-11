@@ -1,47 +1,112 @@
 <div class="home-wrapper">
-  <!-- Header de bienvenida -->
-  <div class="welcome-banner">
-    <div class="welcome-text">
-      <h1>¡Bienvenido de nuevo! 👋</h1>
-      <p>Aquí tienes un resumen de tu actividad reciente.</p>
-    </div>
-    <div class="welcome-avatar">
-      <i class="pi pi-user"></i>
-    </div>
+
+  <!-- ── LLM model badge (always visible) ─────────────────── -->
+  <div class="llm-badge">
+    <i class="pi pi-microchip-ai"></i>
+    <span>{{ llmModel }}</span>
   </div>
 
-  <!-- Tarjetas de estadísticas -->
-  <div class="stats-grid">
-    <p-card *ngFor="let stat of stats" styleClass="stat-card">
-      <div class="stat-content">
-        <div class="stat-icon" [style.background]="stat.color + '22'">
-          <i class="pi" [ngClass]="stat.icon" [style.color]="stat.color"></i>
-        </div>
-        <div class="stat-info">
-          <span class="stat-value">{{ stat.value }}</span>
-          <span class="stat-label">{{ stat.label }}</span>
-        </div>
+  <!-- ══════════ GROUP SELECTION ══════════════════════════════ -->
+  @if (!selectedGroup()) {
+
+    <div class="welcome-banner">
+      <div class="welcome-text">
+        <h1>¡Bienvenido, {{ currentUser()?.username }}! 👋</h1>
+        <p>Selecciona un grupo para ver su dashboard.</p>
       </div>
-    </p-card>
-  </div>
+      <div class="welcome-avatar"><i class="pi pi-users"></i></div>
+    </div>
 
-  <!-- Panel de actividad reciente -->
-  <div class="section-title">
-    <i class="pi pi-clock"></i>
-    <h2>Actividad Reciente</h2>
-  </div>
+    <div class="section-title">
+      <i class="pi pi-folder-open"></i>
+      <h2>Tus grupos</h2>
+    </div>
 
-  <p-card styleClass="activity-card">
-    <ul class="activity-list">
-      <li *ngFor="let activity of recentActivity" class="activity-item">
-        <div class="activity-icon" [ngClass]="'severity-' + activity.severity">
-          <i class="pi" [ngClass]="activity.icon"></i>
-        </div>
-        <div class="activity-details">
-          <span class="activity-text">{{ activity.text }}</span>
-          <span class="activity-time">{{ activity.time }}</span>
-        </div>
-      </li>
-    </ul>
-  </p-card>
+    @if (userGroups().length > 0) {
+      <div class="groups-grid">
+        @for (g of userGroups(); track g.id) {
+          <div class="group-card" (click)="selectGroup(g)" [style.--accent]="g.color">
+            <div class="group-icon" [style.background]="g.color + '22'" [style.color]="g.color">
+              <i class="pi" [ngClass]="g.icon"></i>
+            </div>
+            <div class="group-info">
+              <span class="group-name">{{ g.name }}</span>
+              <span class="group-desc">{{ g.description }}</span>
+              <span class="group-members">
+                <i class="pi pi-users"></i> {{ g.members.length }} miembros
+              </span>
+            </div>
+            <i class="pi pi-angle-right group-arrow"></i>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="empty-groups">
+        <i class="pi pi-folder-open"></i>
+        <p>No perteneces a ningún grupo aún.</p>
+      </div>
+    }
+  }
+
+  <!-- ══════════ GROUP DASHBOARD ═══════════════════════════════ -->
+  @if (selectedGroup(); as group) {
+
+    <!-- Header del grupo -->
+    <div class="group-dashboard-header" [style.--accent]="group.color">
+      <button class="back-btn" (click)="clearGroup()">
+        <i class="pi pi-angle-left"></i>
+      </button>
+      <div class="group-icon sm" [style.background]="group.color + '22'" [style.color]="group.color">
+        <i class="pi" [ngClass]="group.icon"></i>
+      </div>
+      <div>
+        <h1>{{ group.name }}</h1>
+        <p>{{ group.description }}</p>
+      </div>
+      <button class="btn-create-ticket" (click)="goToTickets()">
+        <i class="pi pi-plus"></i> Ir a tickets
+      </button>
+    </div>
+
+    @if (groupStats(); as stats) {
+
+      <!-- Kanban counts -->
+      <div class="kanban-stats">
+        @for (col of stats.byState; track col.label) {
+          <div class="kstat-card" [style.border-top-color]="col.color">
+            <div class="kstat-icon" [style.color]="col.color">
+              <i class="pi" [ngClass]="col.icon"></i>
+            </div>
+            <span class="kstat-count" [style.color]="col.color">{{ col.count }}</span>
+            <span class="kstat-label">{{ col.label }}</span>
+          </div>
+        }
+      </div>
+
+      <!-- Recent tickets -->
+      <div class="section-title" style="margin-top:24px">
+        <i class="pi pi-clock"></i>
+        <h2>Tickets recientes</h2>
+        <span class="total-badge">{{ stats.total }} total</span>
+      </div>
+
+      <div class="recent-list">
+        @for (t of stats.recent; track t.id) {
+          <div class="recent-item">
+            <span class="recent-id">#{{ t.id }}</span>
+            <span class="recent-title">{{ t.titulo }}</span>
+            <span class="estado-mini" [style.color]="getStateColor(t.estado)">
+              <i class="pi pi-circle-fill"></i> {{ getStateLabel(t.estado) }}
+            </span>
+            <span class="recent-assignee">{{ t.asignadoA || '—' }}</span>
+          </div>
+        }
+        @if (stats.recent.length === 0) {
+          <p class="no-tickets">No hay tickets en este grupo.</p>
+        }
+      </div>
+
+    }
+  }
+
 </div>

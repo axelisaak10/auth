@@ -177,3 +177,109 @@
 }
 
 .w-full { width: 100%; }
+
+/* ── Permission badge (table) ─────── */
+.perm-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: #f0fdf4;
+  color: #15803d;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+/* ── Permissions section (dialog) ─── */
+.perms-section {
+  margin-top: 1.25rem;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 1rem;
+}
+
+.perms-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 0.875rem;
+
+  i { color: #6366f1; }
+}
+
+.perms-hint {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: #94a3b8;
+}
+
+.perms-groups {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+
+  @media (max-width: 600px) { grid-template-columns: 1fr; }
+}
+
+.perm-group {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.75rem;
+}
+
+.perm-group-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6366f1;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.perm-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid #f1f5f9;
+
+  &:last-child { border-bottom: none; }
+}
+
+.perm-label {
+  font-size: 0.8rem;
+  color: #374151;
+  cursor: pointer;
+  flex: 1;
+  min-width: 90px;
+}
+
+.perm-perm-code {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  font-family: monospace;
+  background: #f1f5f9;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+}
+
+.perm-expiry {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  padding-left: 1.6rem;
+  margin-top: 0.2rem;
+}
+
+.expiry-icon { color: #f59e0b; font-size: 0.75rem; }
+
+::ng-deep .perm-date-picker { width: 100%; }
+::ng-deep .perm-date-input  { font-size: 0.75rem !important; padding: 0.3rem 0.5rem !important; width: 100% !important; }

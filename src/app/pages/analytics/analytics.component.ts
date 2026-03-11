@@ -20,8 +20,12 @@ import { TabsModule }         from 'primeng/tabs';
 import { InputNumberModule }  from 'primeng/inputnumber';
 import { TextareaModule }     from 'primeng/textarea';
 import { TooltipModule }      from 'primeng/tooltip';
+import { CheckboxModule }     from 'primeng/checkbox';
 import { MessageService, ConfirmationService } from 'primeng/api';
-import { AuthService } from '../../auth/auth.service';
+
+import { AuthService }        from '../../auth/auth.service';
+import { UsersStoreService, TimedPermission } from '../../auth/users-store.service';
+import { PERMISSIONS, Permission } from '../../auth/permissions';
 
 // ── Validators ────────────────────────────────────
 function allowedDomain(c: AbstractControl): ValidationErrors | null {
@@ -46,6 +50,53 @@ function noCoinciden(g: AbstractControl): ValidationErrors | null {
     ? { noCoinciden: true } : null;
 }
 
+// ── Permission group definition ───────────────────
+interface PermGroup {
+  label: string;
+  items: { key: string; value: Permission }[];
+}
+
+const PERM_GROUPS: PermGroup[] = [
+  {
+    label: 'Grupos',
+    items: [
+      { key: 'Ver grupo',       value: PERMISSIONS.GROUP_VIEW    },
+      { key: 'Ver grupos',      value: PERMISSIONS.GROUPS_VIEW   },
+      { key: 'Editar grupo',    value: PERMISSIONS.GROUP_EDIT    },
+      { key: 'Editar grupos',   value: PERMISSIONS.GROUPS_EDIT   },
+      { key: 'Agregar grupo',   value: PERMISSIONS.GROUP_ADD     },
+      { key: 'Agregar grupos',  value: PERMISSIONS.GROUPS_ADD    },
+      { key: 'Eliminar grupo',  value: PERMISSIONS.GROUP_DELETE  },
+      { key: 'Eliminar grupos', value: PERMISSIONS.GROUPS_DELETE },
+    ],
+  },
+  {
+    label: 'Tickets',
+    items: [
+      { key: 'Ver ticket',      value: PERMISSIONS.TICKET_VIEW       },
+      { key: 'Ver tickets',     value: PERMISSIONS.TICKETS_VIEW      },
+      { key: 'Ver todos',       value: PERMISSIONS.TICKET_VIEW_ALL   },
+      { key: 'Editar ticket',   value: PERMISSIONS.TICKET_EDIT       },
+      { key: 'Editar tickets',  value: PERMISSIONS.TICKETS_EDIT      },
+      { key: 'Agregar ticket',  value: PERMISSIONS.TICKET_ADD        },
+      { key: 'Agregar tickets', value: PERMISSIONS.TICKETS_ADD       },
+      { key: 'Eliminar ticket', value: PERMISSIONS.TICKET_DELETE     },
+      { key: 'Cambiar estado',  value: PERMISSIONS.TICKET_EDIT_STATE },
+    ],
+  },
+  {
+    label: 'Usuarios',
+    items: [
+      { key: 'Ver usuario',       value: PERMISSIONS.USER_VIEW    },
+      { key: 'Ver usuarios',      value: PERMISSIONS.USERS_VIEW   },
+      { key: 'Editar usuario',    value: PERMISSIONS.USER_EDIT    },
+      { key: 'Editar usuarios',   value: PERMISSIONS.USERS_EDIT   },
+      { key: 'Agregar usuarios',  value: PERMISSIONS.USER_ADD     },
+      { key: 'Eliminar usuarios', value: PERMISSIONS.USER_DELETE  },
+    ],
+  },
+];
+
 export interface AppUser {
   id:          number;
   fullName:    string;
@@ -55,12 +106,17 @@ export interface AppUser {
   email:       string;
   phone:       string;
   birthDate:   Date;
-  role:        string;
   level:       string;
   author:      string;
   tickets:     number;
   description: string;
   status:      'active' | 'inactive';
+}
+
+// Per-permission editing state inside the dialog
+interface PermState {
+  checked:   boolean;
+  expiresAt: Date | null;
 }
 
 @Component({
@@ -71,7 +127,7 @@ export interface AppUser {
     TableModule, ButtonModule, DialogModule, InputTextModule,
     PasswordModule, DatePickerModule, SelectModule, TagModule,
     ToastModule, ConfirmDialogModule, TabsModule,
-    InputNumberModule, TextareaModule, TooltipModule
+    InputNumberModule, TextareaModule, TooltipModule, CheckboxModule,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './analytics.component.html',
@@ -81,13 +137,15 @@ export class AnalyticsComponent implements OnInit {
 
   activeTab = '0';
 
+  readonly permGroups = PERM_GROUPS;
+
   users: AppUser[] = [
-    { id:1, fullName:'Ana García',    username:'anagarcia',    initials:'AG', avatarColor:'#6366f1', email:'ana@gmail.com',     phone:'5512345670', birthDate:new Date('1995-04-12'), role:'Admin',  level:'Senior', author:'Equipo Alpha', tickets:12, description:'Administradora principal.',     status:'active'   },
-    { id:2, fullName:'Carlos López',  username:'carloslopez',  initials:'CL', avatarColor:'#10b981', email:'carlos@gmail.com',  phone:'5512345671', birthDate:new Date('1992-08-20'), role:'Editor', level:'Mid',    author:'Equipo Beta',  tickets:7,  description:'Editor de contenido web.',      status:'active'   },
-    { id:3, fullName:'María Torres',  username:'mariatorres',  initials:'MT', avatarColor:'#f59e0b', email:'maria@hotmail.com', phone:'5512345672', birthDate:new Date('1998-01-05'), role:'Viewer', level:'Junior', author:'Equipo Alpha', tickets:3,  description:'Soporte al cliente.',           status:'inactive' },
-    { id:4, fullName:'Luis Martínez', username:'luismtz',      initials:'LM', avatarColor:'#ef4444', email:'luis@gmail.com',    phone:'5512345673', birthDate:new Date('1990-11-30'), role:'Editor', level:'Senior', author:'Equipo Beta',  tickets:9,  description:'Desarrollo de contenido.',      status:'active'   },
-    { id:5, fullName:'Sofía Ramírez', username:'sofiaramirez', initials:'SR', avatarColor:'#8b5cf6', email:'sofia@outlook.com', phone:'5512345674', birthDate:new Date('1994-06-18'), role:'Admin',  level:'Senior', author:'Equipo Gamma', tickets:15, description:'Co-administradora del sistema.',status:'active'   },
-    { id:6, fullName:'Pedro Sánchez', username:'pedrosanchez', initials:'PS', avatarColor:'#06b6d4', email:'pedro@gmail.com',   phone:'5512345675', birthDate:new Date('1997-03-22'), role:'Viewer', level:'Junior', author:'Equipo Gamma', tickets:2,  description:'Monitoreo de sistemas.',        status:'inactive' },
+    { id:1, fullName:'Ana García',    username:'anagarcia',    initials:'AG', avatarColor:'#6366f1', email:'ana@gmail.com',     phone:'5512345670', birthDate:new Date('1995-04-12'), level:'Senior', author:'Equipo Alpha', tickets:12, description:'Administradora principal.',     status:'active'   },
+    { id:2, fullName:'Carlos López',  username:'carloslopez',  initials:'CL', avatarColor:'#10b981', email:'carlos@gmail.com',  phone:'5512345671', birthDate:new Date('1992-08-20'), level:'Mid',    author:'Equipo Beta',  tickets:7,  description:'Editor de contenido web.',      status:'active'   },
+    { id:3, fullName:'María Torres',  username:'mariatorres',  initials:'MT', avatarColor:'#f59e0b', email:'maria@hotmail.com', phone:'5512345672', birthDate:new Date('1998-01-05'), level:'Junior', author:'Equipo Alpha', tickets:3,  description:'Soporte al cliente.',           status:'inactive' },
+    { id:4, fullName:'Luis Martínez', username:'luismtz',      initials:'LM', avatarColor:'#ef4444', email:'luis@gmail.com',    phone:'5512345673', birthDate:new Date('1990-11-30'), level:'Senior', author:'Equipo Beta',  tickets:9,  description:'Desarrollo de contenido.',      status:'active'   },
+    { id:5, fullName:'Sofía Ramírez', username:'sofiaramirez', initials:'SR', avatarColor:'#8b5cf6', email:'sofia@outlook.com', phone:'5512345674', birthDate:new Date('1994-06-18'), level:'Senior', author:'Equipo Gamma', tickets:15, description:'Co-administradora del sistema.',status:'active'   },
+    { id:6, fullName:'Pedro Sánchez', username:'pedrosanchez', initials:'PS', avatarColor:'#06b6d4', email:'pedro@gmail.com',   phone:'5512345675', birthDate:new Date('1997-03-22'), level:'Junior', author:'Equipo Gamma', tickets:2,  description:'Monitoreo de sistemas.',        status:'inactive' },
   ];
 
   filteredUsers: AppUser[] = [];
@@ -100,25 +158,25 @@ export class AnalyticsComponent implements OnInit {
   editingUser: AppUser | null = null;
 
   form!: FormGroup;
-  maxDate = new Date(new Date().setFullYear(new Date().getFullYear() - 18));
+  maxDate    = new Date(new Date().setFullYear(new Date().getFullYear() - 18));
+  minExpDate = new Date();   // expiry must be in the future
   pwFortaleza = 0;
   pwColor     = '#ef4444';
 
-  roleOptions  = [
-    { label: 'Admin',  value: 'Admin'  },
-    { label: 'Editor', value: 'Editor' },
-    { label: 'Viewer', value: 'Viewer' },
-  ];
   levelOptions = [
     { label: 'Junior', value: 'Junior' },
     { label: 'Mid',    value: 'Mid'    },
     { label: 'Senior', value: 'Senior' },
   ];
 
+  /** Estado de cada permiso en el diálogo actual: value → { checked, expiresAt } */
+  permState: Record<string, PermState> = {};
+
   constructor(
     private fb:      FormBuilder,
     private msg:     MessageService,
     private confirm: ConfirmationService,
+    private store:   UsersStoreService,
     public  auth:    AuthService
   ) {}
 
@@ -137,26 +195,56 @@ export class AnalyticsComponent implements OnInit {
   get inactiveUsers() { return this.users.filter(u => u.status === 'inactive').length; }
   get totalTickets()  { return this.users.reduce((s, u) => s + u.tickets, 0); }
 
+  // ── Permissions helpers ────────────────────────
+  permCount(username: string): number {
+    return this.store.getPermissions(username).length;
+  }
+
+  hasExpiry(username: string): boolean {
+    return this.store.getTimedPermissions(username).some(tp => !!tp.expiresAt);
+  }
+
+  private buildPermState(username: string) {
+    const saved = this.store.getTimedPermissions(username);
+    const map: Record<string, TimedPermission> = {};
+    saved.forEach(tp => map[tp.value] = tp);
+
+    this.permState = {};
+    for (const group of PERM_GROUPS) {
+      for (const item of group.items) {
+        const stored = map[item.value];
+        this.permState[item.value] = {
+          checked:   !!stored,
+          expiresAt: stored?.expiresAt ? new Date(stored.expiresAt) : null,
+        };
+      }
+    }
+  }
+
   // ── Filter ─────────────────────────────────────
   applyFilter() {
     const t = this.globalFilter.toLowerCase();
     this.filteredUsers = this.users.filter(u =>
       u.fullName.toLowerCase().includes(t) ||
       u.email.toLowerCase().includes(t)    ||
-      u.role.toLowerCase().includes(t)
+      u.username.toLowerCase().includes(t)
     );
   }
 
   // ── CRUD ───────────────────────────────────────
   openNew() {
     this.isEditing = false; this.editingUser = null;
-    this.submitted = false; this.buildForm(null);
+    this.submitted = false;
+    this.buildForm(null);
+    this.buildPermState('');   // all unchecked for new user
     this.dialogVisible = true;
   }
 
   openEdit(user: AppUser) {
     this.isEditing = true; this.editingUser = { ...user };
-    this.submitted = false; this.buildForm(user);
+    this.submitted = false;
+    this.buildForm(user);
+    this.buildPermState(user.username);
     this.dialogVisible = true;
   }
 
@@ -167,7 +255,6 @@ export class AnalyticsComponent implements OnInit {
       email:           [u?.email       || '', [Validators.required, Validators.email, allowedDomain]],
       phone:           [u?.phone       || '', [Validators.required, Validators.pattern(/^\d{10}$/)]],
       birthDate:       [u?.birthDate   || null, Validators.required],
-      role:            [u?.role        || 'Viewer', Validators.required],
       level:           [u?.level       || 'Junior', Validators.required],
       author:          [u?.author      || ''],
       tickets:         [u?.tickets     ?? 0, [Validators.required, Validators.min(0)]],
@@ -179,7 +266,7 @@ export class AnalyticsComponent implements OnInit {
 
   guardar() {
     this.submitted = true;
-    const required = ['fullName','username','email','phone','birthDate','role','level'];
+    const required = ['fullName','username','email','phone','birthDate','level'];
     if (required.some(f => this.form.get(f)?.invalid)) return;
     const pw = this.f['password'].value;
     if (pw && (this.form.get('password')?.invalid || this.form.errors?.['noCoinciden'])) return;
@@ -188,6 +275,18 @@ export class AnalyticsComponent implements OnInit {
     const initials = val.fullName.split(' ')
       .map((n: string) => n[0]).slice(0, 2).join('').toUpperCase();
     const colors = ['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#ec4899','#f97316'];
+
+    // Collect timed permissions from state
+    const timed: TimedPermission[] = [];
+    for (const [perm, state] of Object.entries(this.permState)) {
+      if (state.checked) {
+        timed.push({
+          value: perm as Permission,
+          expiresAt: state.expiresAt ? state.expiresAt.toISOString() : null,
+        });
+      }
+    }
+    this.store.updateTimedPermissions(val.username, timed);
 
     if (this.isEditing && this.editingUser) {
       const idx = this.users.findIndex(u => u.id === this.editingUser!.id);

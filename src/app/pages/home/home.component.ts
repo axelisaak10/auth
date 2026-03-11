@@ -1,6 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { CardModule } from 'primeng/card';
+import { AuthService } from '../../auth/auth.service';
+import { GroupsService, Group } from '../../services/groups.service';
+import { ALL_TICKETS, KANBAN_COLS, TicketEstado } from '../tickets/tickets.component';
 
 @Component({
   selector: 'app-home',
@@ -10,17 +14,44 @@ import { CardModule } from 'primeng/card';
   styleUrls: ['./home.component.scss']
 })
 export class HomeComponent {
-  stats = [
-    { label: 'Sesiones Activas', value: '1',    icon: 'pi-desktop',    color: '#0f3460' },
-    { label: 'Mensajes',         value: '12',   icon: 'pi-envelope',   color: '#533483' },
-    { label: 'Notificaciones',   value: '3',    icon: 'pi-bell',       color: '#f59e0b' },
-    { label: 'Tareas Pendientes',value: '5',    icon: 'pi-check-square',color: '#10b981' },
-  ];
+  private auth   = inject(AuthService);
+  private groups = inject(GroupsService);
+  private router = inject(Router);
 
-  recentActivity = [
-    { text: 'Inicio de sesión exitoso',            time: 'Hace un momento', icon: 'pi-sign-in',     severity: 'success' },
-    { text: 'Perfil visualizado',                  time: 'Hace 5 min',      icon: 'pi-user',        severity: 'info'    },
-    { text: 'Configuración actualizada',           time: 'Hace 1 hora',     icon: 'pi-cog',         severity: 'info'    },
-    { text: 'Intento de acceso fallido detectado', time: 'Ayer',            icon: 'pi-exclamation-triangle', severity: 'warn' },
-  ];
+  readonly currentUser   = this.auth.currentUser;
+  readonly selectedGroup = this.groups.selectedGroup;
+  readonly llmModel      = 'claude-sonnet-4-6';
+  readonly kanbanCols    = KANBAN_COLS;
+
+  userGroups = computed(() => {
+    const u = this.currentUser();
+    return u ? this.groups.getGroupsForUser(u.username) : [];
+  });
+
+  groupStats = computed(() => {
+    const g = this.selectedGroup();
+    if (!g) return null;
+    const tickets = ALL_TICKETS.filter(t =>
+      t.grupo === g.name || g.members.some(m => t.asignadoA === m)
+    );
+    const byState = KANBAN_COLS.map(col => ({
+      label: col.label, color: col.color, icon: col.icon,
+      count: tickets.filter(t => t.estado === col.value).length,
+    }));
+    const recent = [...tickets]
+      .sort((a, b) => b.fechaCreacion.getTime() - a.fechaCreacion.getTime())
+      .slice(0, 5);
+    return { total: tickets.length, byState, recent };
+  });
+
+  selectGroup(group: Group)  { this.groups.selectGroup(group); }
+  clearGroup()               { this.groups.selectGroup(null); }
+  goToTickets()              { this.router.navigate(['/tickets']); }
+
+  getStateColor(estado: TicketEstado): string {
+    return KANBAN_COLS.find(c => c.value === estado)?.color ?? '#94a3b8';
+  }
+  getStateLabel(estado: TicketEstado): string {
+    return KANBAN_COLS.find(c => c.value === estado)?.label ?? estado;
+  }
 }

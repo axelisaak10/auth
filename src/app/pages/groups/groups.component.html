@@ -1,0 +1,149 @@
+<p-toast position="top-right" />
+
+<div class="groups-page">
+
+  <div class="page-header">
+    <div>
+      <h1><i class="pi pi-folder-open"></i> Gestión de Grupos</h1>
+      <p>Administra los grupos del sistema y sus miembros.</p>
+    </div>
+    @if (canAdd()) {
+      <p-button icon="pi pi-plus" label="Nuevo Grupo" (onClick)="openNew()" />
+    }
+  </div>
+
+  <div class="groups-grid">
+    @for (g of groupList(); track g.id) {
+      <div class="group-card">
+
+        <div class="card-top">
+          <div class="group-icon" [style.background]="g.color + '22'" [style.color]="g.color">
+            <i class="pi" [ngClass]="g.icon"></i>
+          </div>
+          <div class="group-info">
+            <span class="group-name">{{ g.name }}</span>
+            <span class="group-desc">{{ g.description }}</span>
+          </div>
+          <div class="card-actions">
+            @if (canEdit()) {
+              <p-button icon="pi pi-pencil" severity="info" [text]="true" [rounded]="true"
+                        (onClick)="openEdit(g)" pTooltip="Editar" tooltipPosition="top" />
+            }
+            @if (canDelete()) {
+              <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true"
+                        (onClick)="deleteGroup(g)" pTooltip="Eliminar" tooltipPosition="top" />
+            }
+          </div>
+        </div>
+
+        <!-- Members -->
+        <div class="members-section">
+          <div class="members-label">
+            <i class="pi pi-users"></i> Miembros ({{ g.members.length }})
+          </div>
+          <div class="members-list">
+            @for (m of g.members; track m) {
+              <div class="member-chip">
+                <span>{{ m }}</span>
+                @if (canEdit()) {
+                  <button class="chip-remove" (click)="removeMember(g.id, m)">
+                    <i class="pi pi-times"></i>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+          @if (canEdit()) {
+            <div class="add-member-row">
+              <select [(ngModel)]="addMemberInput" class="member-select">
+                <option value="">— Agregar miembro —</option>
+                @for (u of allUsers; track u.username) {
+                  @if (!g.members.includes(u.username)) {
+                    <option [value]="u.username">{{ u.username }} · {{ u.area }}</option>
+                  }
+                }
+              </select>
+              <button class="btn-add-member" (click)="addMember(g.id)" [disabled]="!addMemberInput">
+                <i class="pi pi-user-plus"></i>
+              </button>
+            </div>
+          }
+        </div>
+
+      </div>
+    }
+  </div>
+
+  @if (groupList().length === 0) {
+    <div class="empty-state">
+      <i class="pi pi-folder-open"></i>
+      <p>No hay grupos. Crea uno para comenzar.</p>
+    </div>
+  }
+
+</div>
+
+<!-- ── Dialog crear / editar ─────────────────────── -->
+<p-dialog [(visible)]="dialogVisible"
+          [header]="isEditing ? 'Editar Grupo' : 'Nuevo Grupo'"
+          [modal]="true" [style]="{width:'520px'}"
+          [draggable]="false" [resizable]="false">
+
+  <div class="dialog-form">
+    <div class="field">
+      <label>Nombre *</label>
+      <input pInputText [(ngModel)]="editGroup.name" class="w-full" placeholder="Nombre del grupo" />
+    </div>
+    <div class="field">
+      <label>Descripción</label>
+      <input pInputText [(ngModel)]="editGroup.description" class="w-full" placeholder="Descripción breve" />
+    </div>
+    <div class="field">
+      <label>Ícono</label>
+      <div class="icon-picker">
+        @for (ico of iconOptions; track ico) {
+          <button class="ico-btn" [class.selected]="editGroup.icon === ico"
+                  (click)="editGroup.icon = ico">
+            <i class="pi" [ngClass]="ico"></i>
+          </button>
+        }
+      </div>
+    </div>
+    <div class="field">
+      <label>Color</label>
+      <div class="color-picker">
+        @for (c of colorOptions; track c) {
+          <button class="color-btn" [class.selected]="editGroup.color === c"
+                  [style.background]="c" (click)="editGroup.color = c">
+          </button>
+        }
+      </div>
+    </div>
+    <div class="field">
+      <label>Miembros</label>
+      <div class="members-list">
+        @for (m of editGroup.members ?? []; track m) {
+          <div class="member-chip">
+            <span>{{ m }}</span>
+            <button class="chip-remove" (click)="removeMemberFromEdit(m)">
+              <i class="pi pi-times"></i>
+            </button>
+          </div>
+        }
+      </div>
+      <select class="member-select" (change)="onEditMemberSelect($event)">
+        <option value="">— Agregar miembro —</option>
+        @for (u of allUsers; track u.username) {
+          @if (!(editGroup.members ?? []).includes(u.username)) {
+            <option [value]="u.username">{{ u.username }} · {{ u.area }}</option>
+          }
+        }
+      </select>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" severity="secondary" (onClick)="dialogVisible = false" />
+    <p-button [label]="isEditing ? 'Guardar' : 'Crear'" icon="pi pi-check" (onClick)="save()" />
+  </ng-template>
+</p-dialog>

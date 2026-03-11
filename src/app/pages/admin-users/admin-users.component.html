@@ -42,8 +42,8 @@
             <div class="action-btns">
               <p-button icon="pi pi-pencil" label="Editar permisos" size="small"
                         (onClick)="openDialog(user)" />
-              <p-button icon="pi pi-refresh" label="Restablecer" size="small"
-                        severity="secondary" (onClick)="resetToDefault(user)" />
+              <p-button icon="pi pi-trash" label="Quitar todos" size="small"
+                        severity="danger" (onClick)="clearPermissions(user)" />
             </div>
           </td>
         </tr>

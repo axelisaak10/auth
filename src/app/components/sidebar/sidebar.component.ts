@@ -8,7 +8,7 @@ interface MenuItem {
   icon: string;
   route: string;
   active: boolean;
-  adminOnly?: boolean;
+  permission?: string;   // show only if user has this permission
 }
 
 @Component({
@@ -22,17 +22,17 @@ export class SidebarComponent {
   collapsed = false;
 
   menuItems: MenuItem[] = [
-    { label: 'Inicio',     icon: 'pi-home',      route: '/home',           active: true  },
-    { label: 'Tickets',    icon: 'pi-ticket',    route: '/tickets',        active: false },
-    { label: 'Perfil',     icon: 'pi-user',      route: '/profile/users',  active: false },
-    { label: 'Analítica',  icon: 'pi-chart-bar', route: '/analytics/total',active: false },
-    { label: 'Usuarios',   icon: 'pi-users',     route: '/admin/users',    active: false, adminOnly: true },
-    { label: 'Ajustes',    icon: 'pi-cog',       route: '/settings',       active: false },
+    { label: 'Inicio',    icon: 'pi-home',        route: '/home',            active: true  },
+    { label: 'Tickets',   icon: 'pi-ticket',      route: '/tickets',         active: false },
+    { label: 'Perfil',    icon: 'pi-user',        route: '/profile/users',   active: false },
+    { label: 'Analítica', icon: 'pi-chart-bar',   route: '/analytics/total', active: false },
+    { label: 'Grupos',    icon: 'pi-folder-open', route: '/groups',          active: false, permission: 'group:view' },
+    { label: 'Usuarios',  icon: 'pi-users',       route: '/admin/users',     active: false, permission: 'users:view' },
+    { label: 'Ajustes',   icon: 'pi-cog',         route: '/settings',        active: false },
   ];
 
   get visibleItems(): MenuItem[] {
-    const role = this.auth.currentUser()?.role;
-    return this.menuItems.filter(m => !m.adminOnly || role === 'admin');
+    return this.menuItems.filter(m => !m.permission || this.auth.hasPermission(m.permission as any));
   }
 
   constructor(private router: Router, public auth: AuthService) {}

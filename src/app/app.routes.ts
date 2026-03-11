@@ -50,6 +50,10 @@ export const routes: Routes = [
     path: 'admin/users',
     loadComponent: () => import('./pages/admin-users/admin-users.component').then(m => m.AdminUsersComponent)
   },
+  {
+    path: 'groups',
+    loadComponent: () => import('./pages/groups/groups.component').then(m => m.GroupsComponent)
+  },
 
   // ── Otros ────────────────────────────────────────
   {

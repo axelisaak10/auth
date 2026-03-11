@@ -1,173 +1,355 @@
 <div class="tickets-wrapper">
 
-  <!-- Header -->
+  <!-- ── Header ──────────────────────────────────────── -->
   <div class="tickets-header">
     <div>
-      <h1>Tickets</h1>
-      @if (canViewAll()) {
-        <p>Vista de administrador — todos los tickets</p>
-      } @else {
-        <p>Mis tickets asignados · <strong>{{ auth.currentUser()?.area }}</strong></p>
-      }
+      <h1><i class="pi pi-ticket"></i> Tickets</h1>
+      <p>{{ canViewAll() ? 'Vista completa — todos los grupos' : 'Mis tickets · ' + currentUser()?.area }}</p>
     </div>
     <div class="header-right">
-      @if (canEdit()) {
+      <div class="view-toggle">
+        <button [class.active]="viewMode==='kanban'" (click)="viewMode='kanban'" title="Kanban">
+          <i class="pi pi-th-large"></i>
+        </button>
+        <button [class.active]="viewMode==='list'" (click)="viewMode='list'" title="Lista">
+          <i class="pi pi-list"></i>
+        </button>
+      </div>
+      @if (canAdd()) {
         <button class="btn-new" (click)="openCreate()">
           <i class="pi pi-plus"></i> Nuevo ticket
         </button>
       }
-      <div class="role-badge" [class.admin]="canViewAll()">
-        <i class="pi" [ngClass]="canViewAll() ? 'pi-shield' : 'pi-user'"></i>
-        {{ canViewAll() ? 'Administrador' : 'Usuario' }}
-      </div>
     </div>
   </div>
 
-  <!-- Tablas por grupo -->
-  @for (group of ticketsByGroup(); track group.grupo) {
-    <div class="group-section">
-      <div class="group-header">
-        <i class="pi pi-folder"></i>
-        {{ group.grupo }}
-        <span class="group-count">{{ group.tickets.length }}</span>
-      </div>
-      <div class="table-card">
-        <table class="tickets-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Título</th>
-              <th>Estado</th>
-              @if (canViewAll()) {
-                <th>Asignado a</th>
-              }
-              @if (canEdit() || canEditState() || canDelete()) {
-                <th>Acciones</th>
-              }
-            </tr>
-          </thead>
-          <tbody>
-            @for (ticket of group.tickets; track ticket.id) {
-              <tr>
-                <td class="id-cell">{{ ticket.id }}</td>
-                <td class="titulo-cell">{{ ticket.titulo }}</td>
-                <td>
-                  <span class="estado-badge" [ngClass]="'estado-' + ticket.estado.replace(' ', '-')">
-                    {{ ticket.estado }}
+  <!-- ── Group Filter ────────────────────────────────── -->
+  <div class="group-filter-bar">
+    <span class="gf-label"><i class="pi pi-folder"></i> Grupo:</span>
+    <button [class.active]="selectedGrupo==='all'" (click)="selectedGrupo='all'">
+      Todos
+    </button>
+    @for (g of grupos; track g) {
+      <button [class.active]="selectedGrupo===g" (click)="selectedGrupo=g">
+        {{ g }}
+        <span class="gf-count">{{ countByGrupo(g) }}</span>
+      </button>
+    }
+  </div>
+
+  <!-- ── Quick Filters ───────────────────────────────── -->
+  <div class="quick-filters">
+    <button [class.active]="quickFilter==='all'"        (click)="quickFilter='all'">
+      <i class="pi pi-list"></i> Todos
+    </button>
+    <button [class.active]="quickFilter==='mine'"       (click)="quickFilter='mine'">
+      <i class="pi pi-user"></i> Mis tickets
+    </button>
+    <button [class.active]="quickFilter==='unassigned'" (click)="quickFilter='unassigned'">
+      <i class="pi pi-user-minus"></i> Sin asignar
+    </button>
+    <button [class.active]="quickFilter==='high'"       (click)="quickFilter='high'">
+      <i class="pi pi-arrow-up"></i> Prioridad alta
+    </button>
+  </div>
+
+  <!-- ════ KANBAN VIEW ════════════════════════════════ -->
+  @if (viewMode === 'kanban') {
+    <div class="kanban-board">
+      @for (col of kanbanCols; track col.value) {
+        <div class="kanban-col"
+             [class.drag-over]="dragOverCol === col.value"
+             (dragover)="onDragOver($event, col.value)"
+             (drop)="onDrop(col.value)"
+             (dragleave)="dragOverCol = null">
+
+          <div class="col-header" [style.border-top-color]="col.color">
+            <span class="col-title">
+              <i class="pi" [ngClass]="col.icon" [style.color]="col.color"></i>
+              {{ col.label }}
+            </span>
+            <span class="col-count" [style.background]="col.color + '22'" [style.color]="col.color">
+              {{ ticketsForCol(col.value).length }}
+            </span>
+          </div>
+
+          <div class="col-cards">
+            @for (ticket of ticketsForCol(col.value); track ticket.id) {
+              <div class="ticket-card"
+                   [class.dragging]="draggingTicket?.id === ticket.id"
+                   [draggable]="canEditState()"
+                   (dragstart)="onDragStart(ticket)"
+                   (dragend)="onDragEnd()"
+                   (click)="openDetail(ticket)">
+
+                <div class="card-top">
+                  <span class="card-id">#{{ ticket.id }}</span>
+                  <span class="prio-chip"
+                        [style.color]="getPriority(ticket.prioridad).color"
+                        [style.background]="getPriority(ticket.prioridad).bg">
+                    {{ ticket.prioridad }}
                   </span>
-                </td>
-                @if (canViewAll()) {
-                  <td>
-                    <span class="asignado-nombre">{{ ticket.asignadoA }}</span>
-                    @if (areaDeUsuario(ticket.asignadoA)) {
-                      <span class="asignado-area">{{ areaDeUsuario(ticket.asignadoA) }}</span>
-                    }
-                  </td>
+                </div>
+                <p class="card-title">{{ ticket.titulo }}</p>
+                <div class="card-meta">
+                  <span class="card-group"><i class="pi pi-folder"></i> {{ ticket.grupo }}</span>
+                  @if (ticket.asignadoA) {
+                    <span class="card-assignee"><i class="pi pi-user"></i> {{ ticket.asignadoA }}</span>
+                  } @else {
+                    <span class="card-assignee unassigned"><i class="pi pi-user-minus"></i> Sin asignar</span>
+                  }
+                </div>
+                @if (ticket.fechaLimite) {
+                  <div class="card-deadline">
+                    <i class="pi pi-calendar"></i> {{ ticket.fechaLimite | date:'dd/MM/yy' }}
+                  </div>
                 }
-                @if (canEdit() || canEditState() || canDelete()) {
-                  <td class="actions-cell">
-                    @if (canEdit() || canEditState()) {
-                      <button class="btn-icon edit" (click)="openEdit(ticket)" title="Editar">
-                        <i class="pi pi-pencil"></i>
-                      </button>
-                    }
-                    @if (canDelete()) {
-                      <button class="btn-icon delete" (click)="deleteTicket(ticket.id)" title="Eliminar">
-                        <i class="pi pi-trash"></i>
-                      </button>
-                    }
-                  </td>
-                }
-              </tr>
+              </div>
             }
-          </tbody>
-        </table>
-      </div>
-    </div>
-  } @empty {
-    <div class="empty-state">
-      <i class="pi pi-inbox"></i>
-      <p>No hay tickets disponibles</p>
+            @if (ticketsForCol(col.value).length === 0) {
+              <div class="col-empty"><i class="pi pi-inbox"></i><span>Sin tickets</span></div>
+            }
+          </div>
+        </div>
+      }
     </div>
   }
 
-  <!-- Sheet -->
-  @if (editingTicket) {
-    <div class="sheet-overlay" (click)="cancelEdit()"></div>
-    <div class="sheet">
-
-      <div class="sheet-header">
-        <div class="sheet-title">
-          <i class="pi" [ngClass]="isNewTicket ? 'pi-plus-circle' : 'pi-pencil'"></i>
-          {{ isNewTicket ? 'Nuevo ticket' : (canEdit() ? 'Editar ticket' : 'Editar estado') }}
-        </div>
-        <button class="sheet-close" (click)="cancelEdit()">
-          <i class="pi pi-times"></i>
-        </button>
-      </div>
-
-      <div class="sheet-body">
-
-        @if (!isNewTicket) {
-          <div class="ticket-chip">#{{ editingTicket.id }}</div>
-        }
-
-        @if (canEdit()) {
-          <div class="edit-field">
-            <label class="field-label">Título</label>
-            <input type="text" [(ngModel)]="editingTicket.titulo" class="edit-input" placeholder="Título del ticket" />
-          </div>
-          <div class="edit-field">
-            <label class="field-label">Descripción</label>
-            <textarea [(ngModel)]="editingTicket.descripcion" class="edit-input edit-textarea" rows="4" placeholder="Describe el problema o tarea..."></textarea>
-          </div>
-          <div class="edit-field">
-            <label class="field-label">Grupo</label>
-            <select [(ngModel)]="editingTicket.grupo" class="edit-input edit-select">
-              @for (g of grupos; track g) {
-                <option [value]="g">{{ g }}</option>
+  <!-- ════ LIST VIEW ══════════════════════════════════ -->
+  @if (viewMode === 'list') {
+    <div class="list-view">
+      <table class="tickets-table">
+        <thead>
+          <tr>
+            <th>#</th><th>Título</th><th>Estado</th><th>Prioridad</th>
+            @if (canViewAll()) { <th>Asignado a</th> }
+            <th>Grupo</th><th>Fecha límite</th>
+            @if (canEdit() || canEditState() || canDelete()) { <th>Acciones</th> }
+          </tr>
+        </thead>
+        <tbody>
+          @for (ticket of filteredTickets(); track ticket.id) {
+            <tr class="list-row" (click)="openDetail(ticket)">
+              <td class="id-cell">#{{ ticket.id }}</td>
+              <td class="titulo-cell">{{ ticket.titulo }}</td>
+              <td>
+                <span class="estado-badge estado-{{ ticket.estado }}">
+                  @for (col of kanbanCols; track col.value) {
+                    @if (col.value === ticket.estado) { {{ col.label }} }
+                  }
+                </span>
+              </td>
+              <td>
+                <span class="prio-chip"
+                      [style.color]="getPriority(ticket.prioridad).color"
+                      [style.background]="getPriority(ticket.prioridad).bg">
+                  {{ ticket.prioridad }}
+                </span>
+              </td>
+              @if (canViewAll()) { <td>{{ ticket.asignadoA || '—' }}</td> }
+              <td>{{ ticket.grupo }}</td>
+              <td>{{ ticket.fechaLimite ? (ticket.fechaLimite | date:'dd/MM/yy') : '—' }}</td>
+              @if (canEdit() || canEditState() || canDelete()) {
+                <td class="actions-cell" (click)="$event.stopPropagation()">
+                  @if (canEdit() || canEditState()) {
+                    <button class="btn-icon edit" (click)="openEdit(ticket)"><i class="pi pi-pencil"></i></button>
+                  }
+                  @if (canDelete()) {
+                    <button class="btn-icon delete" (click)="deleteTicket(ticket.id)"><i class="pi pi-trash"></i></button>
+                  }
+                </td>
               }
-            </select>
-          </div>
-          <div class="edit-field">
-            <label class="field-label">Asignado a</label>
-            <select [(ngModel)]="editingTicket.asignadoA" class="edit-input edit-select">
-              <option value="">— Sin asignar —</option>
-              @for (u of usuarios; track u.username) {
-                <option [value]="u.username">{{ u.username }} · {{ u.area }}</option>
-              }
-            </select>
-          </div>
-        } @else {
-          <p class="sheet-titulo">{{ editingTicket.titulo }}</p>
-          <div class="edit-field">
-            <label class="field-label">Descripción</label>
-            <p class="sheet-descripcion">{{ editingTicket.descripcion }}</p>
-          </div>
-        }
-
-        <div class="edit-field">
-          <label class="field-label">Estado</label>
-          <div class="estado-options">
-            @for (e of estados; track e) {
-              <label class="estado-option" [class.selected]="editEstado === e">
-                <input type="radio" [value]="e" [(ngModel)]="editEstado" />
-                <span class="estado-badge" [ngClass]="'estado-' + e.replace(' ', '-')">{{ e }}</span>
-              </label>
-            }
-          </div>
-        </div>
-
-      </div>
-
-      <div class="sheet-footer">
-        <button class="btn-cancel" (click)="cancelEdit()">Cancelar</button>
-        <button class="btn-save" (click)="saveEdit()">
-          {{ isNewTicket ? 'Crear ticket' : 'Guardar cambios' }}
-        </button>
-      </div>
-
+            </tr>
+          }
+        </tbody>
+      </table>
+      @if (filteredTickets().length === 0) {
+        <div class="empty-state"><i class="pi pi-inbox"></i><p>No hay tickets</p></div>
+      }
     </div>
   }
 
 </div>
+
+<!-- ════ DETAIL PANEL ══════════════════════════════════ -->
+@if (detailTicket) {
+  <div class="sheet-overlay" (click)="closeDetail()"></div>
+  <div class="sheet">
+    <div class="sheet-header">
+      <span class="sheet-title"><i class="pi pi-ticket"></i> Detalle #{{ detailTicket.id }}</span>
+      <div class="sheet-header-actions">
+        @if ((canEdit() && isCreator(detailTicket)) || canViewAll()) {
+          <button class="btn-icon edit" (click)="openEdit(detailTicket); closeDetail()">
+            <i class="pi pi-pencil"></i>
+          </button>
+        }
+        @if (canDelete()) {
+          <button class="btn-icon delete" (click)="deleteTicket(detailTicket.id)">
+            <i class="pi pi-trash"></i>
+          </button>
+        }
+        <button class="sheet-close" (click)="closeDetail()"><i class="pi pi-times"></i></button>
+      </div>
+    </div>
+
+    <div class="sheet-body">
+      <div class="detail-row">
+        <h2 class="detail-title">{{ detailTicket.titulo }}</h2>
+        <span class="prio-chip large"
+              [style.color]="getPriority(detailTicket.prioridad).color"
+              [style.background]="getPriority(detailTicket.prioridad).bg">
+          {{ detailTicket.prioridad }}
+        </span>
+      </div>
+
+      <div class="detail-meta">
+        <div class="meta-item">
+          <span class="meta-label">Estado</span>
+          <span class="estado-badge estado-{{ detailTicket.estado }}">
+            @for (col of kanbanCols; track col.value) { @if (col.value === detailTicket.estado) { {{ col.label }} } }
+          </span>
+        </div>
+        <div class="meta-item"><span class="meta-label">Grupo</span><span>{{ detailTicket.grupo }}</span></div>
+        <div class="meta-item"><span class="meta-label">Asignado a</span><span>{{ detailTicket.asignadoA || '—' }}</span></div>
+        <div class="meta-item"><span class="meta-label">Creado por</span><span>{{ detailTicket.creadoPor }}</span></div>
+        <div class="meta-item"><span class="meta-label">Creación</span><span>{{ detailTicket.fechaCreacion | date:'dd/MM/yyyy' }}</span></div>
+        <div class="meta-item"><span class="meta-label">Fecha límite</span><span>{{ detailTicket.fechaLimite ? (detailTicket.fechaLimite | date:'dd/MM/yyyy') : '—' }}</span></div>
+      </div>
+
+      <div class="detail-section">
+        <div class="section-label"><i class="pi pi-align-left"></i> Descripción</div>
+        <p class="detail-desc">{{ detailTicket.descripcion }}</p>
+      </div>
+
+      @if (canEditState() && isAssigned(detailTicket)) {
+        <div class="detail-section">
+          <div class="section-label"><i class="pi pi-refresh"></i> Cambiar estado</div>
+          <div class="estado-options">
+            @for (col of kanbanCols; track col.value) {
+              <button class="estado-btn"
+                      [class.active]="detailTicket.estado === col.value"
+                      [style.border-color]="col.color"
+                      [style.color]="detailTicket.estado === col.value ? '#fff' : col.color"
+                      [style.background]="detailTicket.estado === col.value ? col.color : 'transparent'"
+                      (click)="detailTicket.estado = col.value">
+                {{ col.label }}
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      <div class="detail-section">
+        <div class="section-label"><i class="pi pi-comments"></i> Comentarios ({{ detailTicket.comentarios.length }})</div>
+        @for (c of detailTicket.comentarios; track c.id) {
+          <div class="comment-item">
+            <div class="comment-author">{{ c.author }} · {{ c.fecha | date:'dd/MM HH:mm' }}</div>
+            <p class="comment-text">{{ c.text }}</p>
+          </div>
+        }
+        @if (detailTicket.comentarios.length === 0) {
+          <p class="no-comments">Sin comentarios aún.</p>
+        }
+        <div class="comment-input">
+          <input type="text" [(ngModel)]="newComment" placeholder="Escribe un comentario..."
+                 (keyup.enter)="addComment(detailTicket)" class="comment-field" />
+          <button class="btn-send" (click)="addComment(detailTicket)"><i class="pi pi-send"></i></button>
+        </div>
+      </div>
+
+      <div class="detail-section">
+        <div class="section-label"><i class="pi pi-history"></i> Historial</div>
+        @for (h of detailTicket.historial; track h.id) {
+          <div class="history-item">
+            <i class="pi pi-circle-fill"></i>
+            <span>{{ h.author }} — {{ h.action }}</span>
+            <span class="hist-date">{{ h.fecha | date:'dd/MM HH:mm' }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ════ EDIT / CREATE PANEL ═══════════════════════════ -->
+@if (editingTicket) {
+  <div class="sheet-overlay" (click)="cancelEdit()"></div>
+  <div class="sheet">
+    <div class="sheet-header">
+      <span class="sheet-title">
+        <i class="pi" [ngClass]="isNewTicket ? 'pi-plus-circle' : 'pi-pencil'"></i>
+        {{ isNewTicket ? 'Nuevo ticket' : 'Editar ticket' }}
+      </span>
+      <button class="sheet-close" (click)="cancelEdit()"><i class="pi pi-times"></i></button>
+    </div>
+
+    <div class="sheet-body">
+      @if (canEdit() || isNewTicket) {
+        <div class="edit-field">
+          <label class="field-label">Título *</label>
+          <input type="text" [(ngModel)]="editingTicket.titulo" class="edit-input" placeholder="Título del ticket" />
+        </div>
+        <div class="edit-field">
+          <label class="field-label">Descripción</label>
+          <textarea [(ngModel)]="editingTicket.descripcion" class="edit-input edit-textarea" rows="3"
+                    placeholder="Describe el problema..."></textarea>
+        </div>
+        <div class="edit-grid">
+          <div class="edit-field">
+            <label class="field-label">Prioridad</label>
+            <select [(ngModel)]="editingTicket.prioridad" class="edit-input edit-select">
+              @for (p of priorities; track p.value) {
+                <option [value]="p.value">{{ p.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="edit-field">
+            <label class="field-label">Grupo</label>
+            <select [(ngModel)]="editingTicket.grupo" class="edit-input edit-select">
+              @for (g of grupos; track g) { <option [value]="g">{{ g }}</option> }
+            </select>
+          </div>
+        </div>
+        <div class="edit-field">
+          <label class="field-label">Asignado a</label>
+          <select [(ngModel)]="editingTicket.asignadoA" class="edit-input edit-select">
+            <option value="">— Sin asignar —</option>
+            @for (u of todos_usuarios; track u.username) {
+              <option [value]="u.username">{{ u.username }} · {{ u.area }}</option>
+            }
+          </select>
+        </div>
+        <div class="edit-field">
+          <label class="field-label">Fecha límite</label>
+          <input type="date" class="edit-input"
+                 [ngModel]="toDateString(editingTicket.fechaLimite)"
+                 (ngModelChange)="setFechaLimite(editingTicket, $event)" />
+        </div>
+      }
+
+      <div class="edit-field">
+        <label class="field-label">Estado</label>
+        <div class="estado-options">
+          @for (col of kanbanCols; track col.value) {
+            <button class="estado-btn"
+                    [class.active]="editingTicket.estado === col.value"
+                    [style.border-color]="col.color"
+                    [style.color]="editingTicket.estado === col.value ? '#fff' : col.color"
+                    [style.background]="editingTicket.estado === col.value ? col.color : 'transparent'"
+                    (click)="editingTicket.estado = col.value">
+              {{ col.label }}
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="sheet-footer">
+      <button class="btn-cancel" (click)="cancelEdit()">Cancelar</button>
+      <button class="btn-save" (click)="saveEdit()">
+        <i class="pi" [ngClass]="isNewTicket ? 'pi-plus' : 'pi-check'"></i>
+        {{ isNewTicket ? 'Crear ticket' : 'Guardar cambios' }}
+      </button>
+    </div>
+  </div>
+}

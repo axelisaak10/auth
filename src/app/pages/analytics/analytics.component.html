@@ -58,10 +58,10 @@
         <div class="toolbar">
           <div class="search-box">
             <i class="pi pi-search"></i>
-            <input pInputText type="text" placeholder="Buscar usuario, email, rol..."
+            <input pInputText type="text" placeholder="Buscar usuario, email..."
                    [(ngModel)]="globalFilter" (input)="applyFilter()" />
           </div>
-          @if (auth.currentUser()?.role === 'admin') {
+          @if (auth.hasPermission('users:view')) {
             <p-button label="Nuevo Usuario" icon="pi pi-plus" (onClick)="openNew()" />
           }
         </div>
@@ -77,13 +77,13 @@
             <tr>
               <th>Usuario</th>
               <th>Email</th>
-              <th>Rol</th>
+              <th>Permisos</th>
               <th>Nivel</th>
               <th>Autor / Equipo</th>
               <th>Tickets</th>
               <th>Descripción</th>
               <th>Estado</th>
-              @if (auth.currentUser()?.role === 'admin') {
+              @if (auth.hasPermission('users:view')) {
                 <th style="width:120px; text-align:center">Acciones</th>
               }
             </tr>
@@ -101,7 +101,14 @@
                 </div>
               </td>
               <td>{{ user.email }}</td>
-              <td><span class="role-badge">{{ user.role }}</span></td>
+              <td>
+                <span class="perm-badge"
+                      [title]="hasExpiry(user.username) ? 'Tiene permisos con fecha límite' : ''">
+                  <i class="pi pi-lock-open" style="font-size:.75rem"></i>
+                  {{ permCount(user.username) }}
+                  <i *ngIf="hasExpiry(user.username)" class="pi pi-clock" style="font-size:.7rem;color:#f59e0b"></i>
+                </span>
+              </td>
               <td>{{ user.level }}</td>
               <td>{{ user.author }}</td>
               <td>
@@ -115,7 +122,7 @@
                   [value]="user.status === 'active' ? 'Activo' : 'Inactivo'"
                   [severity]="user.status === 'active' ? 'success' : 'danger'" />
               </td>
-              @if (auth.currentUser()?.role === 'admin') {
+              @if (auth.hasPermission('users:view')) {
                 <td>
                   <div class="action-btns">
                     <p-button icon="pi pi-pencil"
@@ -157,9 +164,10 @@
   [(visible)]="dialogVisible"
   [header]="isEditing ? 'Editar Usuario' : 'Nuevo Usuario'"
   [modal]="true"
-  [style]="{width:'640px'}"
+  [style]="{width:'760px'}"
   [draggable]="false"
-  [resizable]="false">
+  [resizable]="false"
+  [dismissableMask]="true">
 
   <form [formGroup]="form" *ngIf="form">
     <div class="dialog-grid">
@@ -205,13 +213,6 @@
         <p-datepicker formControlName="birthDate" [maxDate]="maxDate"
                       dateFormat="dd/mm/yy" styleClass="w-full" inputStyleClass="w-full"
                       [class.p-invalid]="isInvalid('birthDate')" />
-      </div>
-
-      <div class="field">
-        <label>Rol</label>
-        <p-select formControlName="role"
-                  [options]="roleOptions" optionLabel="label" optionValue="value"
-                  styleClass="w-full" placeholder="Seleccionar rol" />
       </div>
 
       <div class="field">
@@ -266,6 +267,49 @@
       </div>
 
     </div>
+
+    <!-- ══ PERMISOS ══ -->
+    <div class="perms-section">
+      <div class="perms-title">
+        <i class="pi pi-shield"></i> Permisos
+        <span class="perms-hint">Activa cada permiso y opcionalmente asigna una fecha de vencimiento.</span>
+      </div>
+
+      <div class="perms-groups">
+        @for (group of permGroups; track group.label) {
+          <div class="perm-group">
+            <div class="perm-group-label">{{ group.label }}</div>
+            @for (item of group.items; track item.value) {
+              <div class="perm-row">
+                <p-checkbox
+                  [(ngModel)]="permState[item.value].checked"
+                  [ngModelOptions]="{standalone: true}"
+                  [binary]="true"
+                  [inputId]="item.value" />
+                <label [for]="item.value" class="perm-label">{{ item.key }}</label>
+                <span class="perm-perm-code">{{ item.value }}</span>
+                @if (permState[item.value]?.checked) {
+                  <div class="perm-expiry">
+                    <i class="pi pi-clock expiry-icon"></i>
+                    <p-datepicker
+                      [(ngModel)]="permState[item.value].expiresAt"
+                      [ngModelOptions]="{standalone: true}"
+                      [minDate]="minExpDate"
+                      placeholder="Permanente"
+                      dateFormat="dd/mm/yy"
+                      [showButtonBar]="true"
+                      inputStyleClass="perm-date-input"
+                      styleClass="perm-date-picker"
+                      [showClear]="true" />
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
   </form>
 
   <ng-template pTemplate="footer">

@@ -12,9 +12,9 @@ import { ToastModule }       from 'primeng/toast';
 import { DividerModule }     from 'primeng/divider';
 import { MessageService }    from 'primeng/api';
 
-import { AuthService, ALL_USERS } from '../../auth/auth.service';
+import { ALL_USERS } from '../../auth/auth.service';
 import { UsersStoreService }      from '../../auth/users-store.service';
-import { PERMISSIONS, Permission, ROLE_PERMISSIONS } from '../../auth/permissions';
+import { PERMISSIONS, Permission } from '../../auth/permissions';
 
 interface UserRow {
   username: string;
@@ -50,49 +50,54 @@ export class AdminUsersComponent implements OnInit {
     {
       label: 'Grupos',
       keys: [
-        { key: 'Ver grupos',       value: PERMISSIONS.GROUP_VIEW   },
-        { key: 'Editar grupos',    value: PERMISSIONS.GROUP_EDIT   },
-        { key: 'Agregar grupos',   value: PERMISSIONS.GROUP_ADD    },
-        { key: 'Eliminar grupos',  value: PERMISSIONS.GROUP_DELETE },
+        { key: 'Ver grupo',          value: PERMISSIONS.GROUP_VIEW    },
+        { key: 'Ver grupos',         value: PERMISSIONS.GROUPS_VIEW   },
+        { key: 'Editar grupo',       value: PERMISSIONS.GROUP_EDIT    },
+        { key: 'Editar grupos',      value: PERMISSIONS.GROUPS_EDIT   },
+        { key: 'Agregar grupo',      value: PERMISSIONS.GROUP_ADD     },
+        { key: 'Agregar grupos',     value: PERMISSIONS.GROUPS_ADD    },
+        { key: 'Eliminar grupo',     value: PERMISSIONS.GROUP_DELETE  },
+        { key: 'Eliminar grupos',    value: PERMISSIONS.GROUPS_DELETE },
       ],
     },
     {
       label: 'Tickets',
       keys: [
-        { key: 'Ver tickets',        value: PERMISSIONS.TICKET_VIEW       },
+        { key: 'Ver ticket',         value: PERMISSIONS.TICKET_VIEW       },
+        { key: 'Ver tickets',        value: PERMISSIONS.TICKETS_VIEW      },
         { key: 'Ver todos',          value: PERMISSIONS.TICKET_VIEW_ALL   },
-        { key: 'Editar tickets',     value: PERMISSIONS.TICKET_EDIT       },
-        { key: 'Agregar tickets',    value: PERMISSIONS.TICKET_ADD        },
-        { key: 'Eliminar tickets',   value: PERMISSIONS.TICKET_DELETE     },
+        { key: 'Editar ticket',      value: PERMISSIONS.TICKET_EDIT       },
+        { key: 'Editar tickets',     value: PERMISSIONS.TICKETS_EDIT      },
+        { key: 'Agregar ticket',     value: PERMISSIONS.TICKET_ADD        },
+        { key: 'Agregar tickets',    value: PERMISSIONS.TICKETS_ADD       },
+        { key: 'Eliminar ticket',    value: PERMISSIONS.TICKET_DELETE     },
         { key: 'Cambiar estado',     value: PERMISSIONS.TICKET_EDIT_STATE },
       ],
     },
     {
       label: 'Usuarios',
       keys: [
-        { key: 'Ver usuario',      value: PERMISSIONS.USER_VIEW    },
-        { key: 'Ver usuarios',     value: PERMISSIONS.USERS_VIEW   },
-        { key: 'Editar usuarios',  value: PERMISSIONS.USER_EDIT    },
-        { key: 'Agregar usuarios', value: PERMISSIONS.USER_ADD     },
-        { key: 'Eliminar usuarios',value: PERMISSIONS.USER_DELETE  },
+        { key: 'Ver usuario',        value: PERMISSIONS.USER_VIEW    },
+        { key: 'Ver usuarios',       value: PERMISSIONS.USERS_VIEW   },
+        { key: 'Editar usuario',     value: PERMISSIONS.USER_EDIT    },
+        { key: 'Editar usuarios',    value: PERMISSIONS.USERS_EDIT   },
+        { key: 'Agregar usuarios',   value: PERMISSIONS.USER_ADD     },
+        { key: 'Eliminar usuarios',  value: PERMISSIONS.USER_DELETE  },
       ],
     },
   ];
 
   constructor(
-    private auth: AuthService,
     private usersStore: UsersStoreService,
     private msg: MessageService,
   ) {}
 
   ngOnInit() {
-    this.users = ALL_USERS
-      .filter(u => u.role === 'user')
-      .map(u => ({
-        username: u.username,
-        area: u.area,
-        permissions: this.usersStore.getPermissions(u.username, u.role),
-      }));
+    this.users = ALL_USERS.map(u => ({
+      username: u.username,
+      area: u.area,
+      permissions: this.usersStore.getPermissions(u.username),
+    }));
   }
 
   openDialog(user: UserRow) {
@@ -130,18 +135,21 @@ export class AdminUsersComponent implements OnInit {
     this.closeDialog();
   }
 
-  resetToDefault(user: UserRow) {
-    const defaults = ROLE_PERMISSIONS['user'];
-    this.usersStore.updatePermissions(user.username, defaults);
-    user.permissions = [...defaults];
+  clearPermissions(user: UserRow) {
+    this.usersStore.clearPermissions(user.username);
+    user.permissions = [];
     this.msg.add({
-      severity: 'info',
-      summary: 'Permisos restablecidos',
-      detail: `${user.username} volvió a los permisos por defecto.`,
+      severity: 'warn',
+      summary: 'Permisos eliminados',
+      detail: `Se quitaron todos los permisos de ${user.username}.`,
     });
   }
 
   permissionCount(user: UserRow): number {
     return user.permissions.length;
+  }
+
+  isAdmin(user: UserRow): boolean {
+    return user.username === 'admin';
   }
 }
