@@ -1,0 +1,327 @@
+<div class="tickets-page">
+    <div class="header-info mb-4">
+        <h2 class="page-title"><i class="pi pi-ticket"></i> Gestión de Tickets</h2>
+        <p class="page-subtitle">Administra los tickets de tu grupo</p>
+    </div>
+
+    <!-- UNIFIED VIEW FOR ALL GROUP USERS -->
+    <ng-container *hasPermission="'VIEW_OWN_TICKETS'">
+        
+        <div *hasPermission="'CREATE_TICKETS'" style="margin-bottom: 1.5rem;">
+            <p-toolbar>
+                <ng-template #start>
+                    <p-button label="Nuevo Ticket" icon="pi pi-plus" severity="primary" size="small" (onClick)="openNew()" />
+                </ng-template>
+            </p-toolbar>
+        </div>
+
+        <!-- View Toggle y Filtros -->
+        <div
+            style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+            <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                <strong style="color: #64748b; font-size: 0.9rem; margin-right: 0.5rem;">Filtros rápidos:</strong>
+                <p-button [outlined]="activeFilter !== 'all'" [rounded]="true" size="small" label="Todos"
+                    (onClick)="activeFilter = 'all'"></p-button>
+                <p-button [outlined]="activeFilter !== 'mine'" [rounded]="true" size="small" label="Mis tickets"
+                    (onClick)="activeFilter = 'mine'"></p-button>
+                <p-button [outlined]="activeFilter !== 'unassigned'" [rounded]="true" size="small" label="Sin asignar"
+                    severity="info" (onClick)="activeFilter = 'unassigned'"></p-button>
+                <p-button [outlined]="activeFilter !== 'high-priority'" [rounded]="true" size="small"
+                    label="Prioridad alta" severity="danger" (onClick)="activeFilter = 'high-priority'"></p-button>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span style="font-size: 0.9rem; color: #64748b;">Vista Tabla</span>
+                <p-toggleswitch [(ngModel)]="viewMode" trueValue="kanban" falseValue="table"></p-toggleswitch>
+                <span style="font-size: 0.9rem; color: #64748b;">Vista Kanban</span>
+            </div>
+        </div>
+
+        <!-- Kanban Board -->
+        <div *ngIf="viewMode === 'kanban'" class="kanban-board">
+            @for (col of kanbanColumns; track col) {
+            <div class="kanban-column" (dragover)="onDragOver($event)" (drop)="onDrop($event, col)">
+
+                <h3>
+                    <p-tag [value]="col" [severity]="getStatusSeverity(col)"></p-tag>
+                    <span>({{ getTicketsByStatus(col).length }})</span>
+                </h3>
+
+                <div class="kanban-cards">
+                    @for (t of getTicketsByStatus(col); track t.id) {
+                    <p-card [draggable]="true" (dragstart)="onDragStart($event, t)"
+                        styleClass="kanban-card cursor-move shadow-1 hover:shadow-3 transition-all"
+                        (click)="onTicketClick(t)">
+                        <ng-template #title>
+                            {{ t.titulo }}
+                        </ng-template>
+                        <ng-template #subtitle>
+                            #{{ t.id }} - {{ t.fechaCreacion }}
+                        </ng-template>
+                        <div class="ticket-meta">
+                            <p-tag [value]="t.prioridad" [severity]="getPrioritySeverity(t.prioridad)"></p-tag>
+                            <div class="ticket-assignee">
+                                <i class="pi pi-user"></i> {{ t.asignadoA }}
+                            </div>
+                        </div>
+                    </p-card>
+                    }
+                </div>
+            </div>
+            }
+        </div>
+
+        <!-- Table View -->
+        <p-card *ngIf="viewMode === 'table'">
+            <p-table [value]="filteredTickets" [paginator]="true" [rows]="10" styleClass="p-datatable-sm"
+                [tableStyle]="{ 'min-width': '50rem' }">
+                <ng-template #header>
+                    <tr>
+                        <th pSortableColumn="id">ID / Título <p-sortIcon field="id" /></th>
+                        <th pSortableColumn="estado">Estado <p-sortIcon field="estado" /></th>
+                        <th pSortableColumn="prioridad">Prioridad <p-sortIcon field="prioridad" /></th>
+                        <th pSortableColumn="asignadoA">Asignado a <p-sortIcon field="asignadoA" /></th>
+                        <th pSortableColumn="fechaLimite">Fecha Límite <p-sortIcon field="fechaLimite" /></th>
+                        <th>Acciones</th>
+                    </tr>
+                </ng-template>
+                <ng-template #body let-t>
+                    <tr>
+                        <td>
+                            <strong>{{ t.id }}</strong><br />
+                            <small>{{ t.titulo }}</small>
+                        </td>
+                        <td><p-tag [value]="t.estado" [severity]="getStatusSeverity(t.estado)" /></td>
+                        <td><p-tag [value]="t.prioridad" [severity]="getPrioritySeverity(t.prioridad)" /></td>
+                        <td>{{ t.asignadoA }}</td>
+                        <td>{{ t.fechaLimite }}</td>
+                        <td>
+                            <p-button icon="pi pi-eye" [rounded]="true" [text]="true" severity="info"
+                                (onClick)="onTicketClick(t)" />
+                        </td>
+                    </tr>
+                </ng-template>
+                <ng-template #emptymessage>
+                    <tr>
+                        <td colspan="6">No hay tickets asignados a ti.</td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </p-card>
+    </ng-container>
+
+    <!-- Dialog Edit/Add Ticket (Basic Admin) -->
+    <p-dialog [(visible)]="showDialog" [modal]="true" [style]="{ width: '45vw', 'min-width': '500px' }"
+        [breakpoints]="{ '960px': '75vw', '640px': '90vw' }" styleClass="p-fluid black-theme-dialog">
+
+        <ng-template #header>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <i class="pi pi-ticket" style="font-size: 1.5rem; color: #a78bfa;"></i>
+                <h2 style="margin: 0; font-size: 1.5rem; color: #ffffff;">{{ editMode ? 'Editar Ticket' : 'Crear Nuevo
+                    Ticket' }}</h2>
+            </div>
+        </ng-template>
+
+        <div style="display: flex; flex-direction: column; gap: 1.5rem; padding-top: 1rem;">
+
+            <div class="field">
+                <label for="titulo"
+                    style="font-weight: 600; color: #e2e8f0; margin-bottom: 0.5rem; display: block;">Título <span
+                        style="color: #ef4444;">*</span></label>
+                <div class="p-input-icon-left" style="width: 100%;">
+                    <i class="pi pi-align-left"></i>
+                    <input id="titulo" pInputText [(ngModel)]="selectedTicket.titulo"
+                        placeholder="Ej. Solucionar bug de login..." style="width: 100%;" />
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="descripcion"
+                    style="font-weight: 600; color: #e2e8f0; margin-bottom: 0.5rem; display: block;">Descripción</label>
+                <textarea id="descripcion" pTextarea [(ngModel)]="selectedTicket.descripcion" [rows]="4"
+                    placeholder="Detalles del ticket..." style="width: 100%; resize: none;"></textarea>
+            </div>
+
+            <div class="grid formgrid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="col-12 md:col-6 field">
+                    <label for="estado"
+                        style="font-weight: 600; color: #e2e8f0; margin-bottom: 0.5rem; display: block;">Estado
+                        Inicial</label>
+                    <p-select id="estado" [options]="estadoOptions" [(ngModel)]="selectedTicket.estado" appendTo="body"
+                        styleClass="w-full" />
+                </div>
+
+                <div class="col-12 md:col-6 field">
+                    <label for="prioridad"
+                        style="font-weight: 600; color: #e2e8f0; margin-bottom: 0.5rem; display: block;">Prioridad</label>
+                    <p-select id="prioridad" [options]="prioridadOptions" [(ngModel)]="selectedTicket.prioridad"
+                        appendTo="body" styleClass="w-full" />
+                </div>
+            </div>
+
+            <div class="grid formgrid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="col-12 md:col-6 field">
+                    <label for="asignadoA"
+                        style="font-weight: 600; color: #e2e8f0; margin-bottom: 0.5rem; display: block;">Asignado a
+                        (Opcional)</label>
+                    <div class="p-input-icon-left" style="width: 100%;">
+                        <i class="pi pi-user"></i>
+                        <input id="asignadoA" pInputText [(ngModel)]="selectedTicket.asignadoA"
+                            placeholder="Usuario del grupo" style="width: 100%;" />
+                    </div>
+                </div>
+
+                <div class="col-12 md:col-6 field">
+                    <label for="fechaLimite"
+                        style="font-weight: 600; color: #e2e8f0; margin-bottom: 0.5rem; display: block;">Fecha
+                        Límite</label>
+                    <div class="p-input-icon-left" style="width: 100%;">
+                        <i class="pi pi-calendar-times"></i>
+                        <input id="fechaLimite" type="date" pInputText [(ngModel)]="selectedTicket.fechaLimite"
+                            style="width: 100%;" />
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <ng-template #footer>
+            <div
+                style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1rem; border-top: 1px solid #e2e8f0; padding-top: 1.5rem;">
+                <p-button label="Cancelar" icon="pi pi-times" [text]="true" severity="secondary"
+                    (onClick)="showDialog = false" />
+                <p-button [label]="editMode ? 'Actualizar Ticket' : 'Crear Ticket'" icon="pi pi-check"
+                    severity="primary" (onClick)="saveTicket()" [disabled]="!selectedTicket.titulo" />
+            </div>
+        </ng-template>
+    </p-dialog>
+
+    <!-- Dialog Details (Normal User) -->
+    <p-dialog [(visible)]="showUserDialog" [modal]="true" [style]="{ width: '700px' }"
+        styleClass="p-fluid black-theme-dialog">
+        <ng-template #header>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <h2 style="margin: 0;">Detalles del Ticket</h2>
+                <p-tag [value]="selectedTicket.estado" [severity]="getStatusSeverity(selectedTicket.estado)"></p-tag>
+            </div>
+        </ng-template>
+
+        <div style="display: flex; flex-direction: column; gap: 1.5rem; padding: 1rem 0;">
+            <!-- Fields depending on creator or assignee -->
+            <div *ngIf="isCreator" class="grid formgrid"
+                style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="field col-12" style="grid-column: span 2;">
+                    <label for="utitulo">Título</label>
+                    <input id="utitulo" pInputText [(ngModel)]="selectedTicket.titulo" />
+                </div>
+                <div class="field col-12" style="grid-column: span 2;">
+                    <label for="udescripcion">Descripción</label>
+                    <textarea id="udescripcion" pTextarea [(ngModel)]="selectedTicket.descripcion"
+                        [rows]="3"></textarea>
+                </div>
+                <div class="field col-6">
+                    <label for="uasignadoA">Asignado a</label>
+                    <input id="uasignadoA" pInputText [(ngModel)]="selectedTicket.asignadoA" />
+                </div>
+                <div class="field col-6">
+                    <label for="uprioridad">Prioridad</label>
+                    <p-select id="uprioridad" [options]="prioridadOptions" [(ngModel)]="selectedTicket.prioridad"
+                        appendTo="body" />
+                </div>
+            </div>
+
+            <!-- Read-only View if NOT creator -->
+            <div *ngIf="!isCreator" class="ticket-details-grid">
+                <div class="detail-item full-width">
+                    <span class="detail-label">Título</span>
+                    <span class="detail-value">{{ selectedTicket.titulo }}</span>
+                </div>
+                <div class="detail-item full-width">
+                    <span class="detail-label">Descripción</span>
+                    <span class="detail-value">{{ selectedTicket.descripcion }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Prioridad</span>
+                    <p-tag [value]="selectedTicket.prioridad"
+                        [severity]="getPrioritySeverity(selectedTicket.prioridad)"></p-tag>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Asignado a</span>
+                    <div class="ticket-assignee" style="width: fit-content;">
+                        <i class="pi pi-user"></i> {{ selectedTicket.asignadoA }}
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Fecha Creación</span>
+                    <span class="detail-value"><i class="pi pi-calendar"></i> {{ selectedTicket.fechaCreacion }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Fecha Límite</span>
+                    <span class="detail-value"><i class="pi pi-calendar-times"></i> {{ selectedTicket.fechaLimite
+                        }}</span>
+                </div>
+            </div>
+
+            <hr class="custom-hr" />
+
+            <!-- Editable fields for both (Status) -->
+            <div class="field">
+                <label for="user-estado" class="detail-label">Cambiar Estado</label>
+                <p-select id="user-estado" [options]="estadoOptions" [(ngModel)]="selectedTicket.estado"
+                    styleClass="w-full" appendTo="body" />
+            </div>
+
+            <hr class="custom-hr" />
+
+            <!-- Comentarios y Actividad -->
+            <div>
+                <h3 class="section-title"><i class="pi pi-comments"></i> Comentarios</h3>
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem;">
+                    <input pInputText placeholder="Escribe un comentario..." [(ngModel)]="newComment"
+                        style="flex: 1;" />
+                </div>
+                <div *ngIf="selectedTicket.comentarios.length === 0"
+                    style="color: #94a3b8; font-style: italic; padding: 1rem; text-align: center; background: #111111; border: 1px solid #333333; border-radius: 8px;">
+                    Aún no hay comentarios. Sé el primero.</div>
+                <div style="display: flex; flex-direction: column; max-height: 250px; overflow-y: auto;">
+                    @for (c of selectedTicket.comentarios; track c.id) {
+                    <div class="comment-box">
+                        <div class="comment-header">
+                            <div class="comment-author"><i class="pi pi-user"></i> {{ c.userId }}</div>
+                            <span class="comment-date"><i class="pi pi-clock"></i> {{ c.createdAt }}</span>
+                        </div>
+                        <div class="comment-text">{{ c.text }}</div>
+                    </div>
+                    }
+                </div>
+            </div>
+
+            <hr class="custom-hr" />
+
+            <!-- Historial -->
+            <div>
+                <h3 class="section-title"><i class="pi pi-history"></i> Historial de Cambios</h3>
+                <div *ngIf="selectedTicket.historialCambios.length === 0"
+                    style="color: #94a3b8; font-style: italic; padding: 1rem; text-align: center; background: #111111; border: 1px solid #333333; border-radius: 8px;">
+                    No hay historial registrado.</div>
+                <ul class="history-list">
+                    @for (h of selectedTicket.historialCambios.slice().reverse(); track h.id) {
+                    <li class="history-item">
+                        <i class="pi pi-sync" style="color: #94a3b8; margin-top: 0.2rem;"></i>
+                        <div class="history-content">
+                            <span class="history-user">{{ h.userId }}</span>
+                            <span class="history-action">{{ h.action }}</span>
+                            <span class="history-time">{{ h.timestamp }}</span>
+                        </div>
+                    </li>
+                    }
+                </ul>
+            </div>
+
+        </div>
+        <ng-template #footer>
+            <p-button label="Cerrar" icon="pi pi-times" [text]="true" severity="secondary"
+                (onClick)="showUserDialog = false" />
+            <p-button label="Guardar Cambios" icon="pi pi-check" (onClick)="saveTicket()" />
+        </ng-template>
+    </p-dialog>
+</div>

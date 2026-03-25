@@ -2,6 +2,7 @@
 <ng-container *appHasPermission="'user:profile:view'">
     <div class="user-profile-container">
 
+<<<<<<< HEAD
         <!-- Suspended Banner -->
         @if (accountSuspended) {
         <div class="suspended-banner">
@@ -9,6 +10,28 @@
             <div class="suspended-info">
                 <strong>Cuenta Suspendida</strong>
                 <span>Tu cuenta se encuentra temporalmente inactiva.</span>
+=======
+    <!-- Suspended Banner -->
+    @if (accountSuspended) {
+    <div class="suspended-banner">
+        <i class="pi pi-exclamation-circle"></i>
+        <div class="suspended-info">
+            <strong>Cuenta Suspendida</strong>
+            <span>Tu cuenta se encuentra temporalmente inactiva.</span>
+        </div>
+        <p-button label="Reactivar" icon="pi pi-refresh" severity="warn" [outlined]="true" size="small"
+            (onClick)="reactivateAccount()" />
+    </div>
+    }
+
+    <!-- Header Card -->
+    <p-card styleClass="profile-header-card">
+        <div class="profile-header">
+            <p-avatar [label]="userInitial" size="xlarge" shape="circle" styleClass="profile-avatar" />
+            <div class="profile-header-info">
+                <h2 class="profile-name">{{ user?.nombre }}</h2>
+                <p class="profile-username">&#64;{{ user?.usuario }}</p>
+>>>>>>> 9da5e22e8d381878948c234f5992eb16a820adfb
             </div>
             <p-button label="Reactivar" icon="pi pi-refresh" severity="warn" [outlined]="true" size="small"
                 (onClick)="reactivateAccount()" />
@@ -151,6 +174,7 @@
         </div>
         }
 
+<<<<<<< HEAD
         <!-- ===== Mis Tickets (solo con permiso ticket:view) ===== -->
         @if (ps.hasPermission('ticket:view') && userTickets.length > 0) {
         <div class="tickets-section">
@@ -159,6 +183,73 @@
                     <span class="toolbar-title">
                         <i class="pi pi-ticket"></i>
                         Mis Tickets
+=======
+    <!-- Details Card -->
+    <p-card header="Información del Usuario" styleClass="profile-details-card">
+        <div class="details-grid">
+            <div class="detail-item">
+                <div class="detail-icon">
+                    <i class="pi pi-user"></i>
+                </div>
+                <div class="detail-content">
+                    <span class="detail-label">Usuario</span>
+                    <span class="detail-value">{{ user?.usuario }}</span>
+                </div>
+            </div>
+
+            <div class="detail-item">
+                <div class="detail-icon">
+                    <i class="pi pi-envelope"></i>
+                </div>
+                <div class="detail-content">
+                    <span class="detail-label">Correo Electrónico</span>
+                    <span class="detail-value">{{ user?.email }}</span>
+                </div>
+            </div>
+
+            <p-divider />
+
+            <div class="detail-item">
+                <div class="detail-icon">
+                    <i class="pi pi-phone"></i>
+                </div>
+                <div class="detail-content">
+                    <span class="detail-label">Teléfono</span>
+                    <span class="detail-value">{{ user?.telefono }}</span>
+                </div>
+            </div>
+
+            <div class="detail-item">
+                <div class="detail-icon">
+                    <i class="pi pi-map-marker"></i>
+                </div>
+                <div class="detail-content">
+                    <span class="detail-label">Dirección</span>
+                    <span class="detail-value">{{ user?.direccion }}</span>
+                </div>
+            </div>
+
+            <p-divider />
+
+            <div class="detail-item">
+                <div class="detail-icon">
+                    <i class="pi pi-calendar"></i>
+                </div>
+                <div class="detail-content">
+                    <span class="detail-label">Fecha de Nacimiento</span>
+                    <span class="detail-value">{{ fechaFormateada }}</span>
+                </div>
+            </div>
+
+            <div class="detail-item">
+                <div class="detail-icon">
+                    <i class="pi pi-shield"></i>
+                </div>
+                <div class="detail-content">
+                    <span class="detail-label">Permisos</span>
+                    <span class="detail-value">
+                        {{ user?.permissions?.length }} Permisos Activos
+>>>>>>> 9da5e22e8d381878948c234f5992eb16a820adfb
                     </span>
                 </ng-template>
             </p-toolbar>
@@ -204,6 +295,7 @@
         </div>
         }
 
+<<<<<<< HEAD
         <!-- Edit Profile Dialog -->
         <p-dialog [(visible)]="showEditDialog" header="Editar Perfil" [modal]="true" [draggable]="false"
             [resizable]="false" styleClass="profile-edit-dialog" [style]="{ width: '520px' }">
@@ -324,3 +416,98 @@
     <p>No tienes permisos para ver el perfil de usuario.</p>
 </div>
 }
+=======
+    <!-- Edit Profile Dialog -->
+    <p-dialog [(visible)]="showEditDialog" header="Editar Perfil" [modal]="true" [draggable]="false" [resizable]="false"
+        styleClass="black-theme-dialog" [style]="{ width: '450px' }">
+        <div class="edit-form" style="display: flex; flex-direction: column; gap: 1.25rem; padding-top: 1rem;">
+            <div class="edit-form-row">
+                <label for="edit-usuario" style="font-size: 0.85rem; font-weight: 600; color: #a3a3a3;">USUARIO</label>
+                <div style="position: relative; display: flex; align-items: center;">
+                    <i class="pi pi-user" style="position: absolute; left: 1rem; color: #737373; z-index: 1;"></i>
+                    <input id="edit-usuario" pInputText [(ngModel)]="editData.usuario" placeholder="Nombre de usuario"
+                        style="width: 100%; height: 3rem; background: #000000; color: #ffffff; border: 1px solid #404040; border-radius: 8px; padding-left: 2.75rem; font-size: 1rem;" />
+                </div>
+            </div>
+
+            <div class="edit-form-row">
+                <label for="edit-email" style="font-size: 0.85rem; font-weight: 600; color: #a3a3a3;">CORREO ELECTRÓNICO</label>
+                <div style="position: relative; display: flex; align-items: center;">
+                    <i class="pi pi-envelope" style="position: absolute; left: 1rem; color: #737373; z-index: 1;"></i>
+                    <input id="edit-email" type="email" pInputText [(ngModel)]="editData.email" placeholder="tu@email.com"
+                        style="width: 100%; height: 3rem; background: #000000; color: #ffffff; border: 1px solid #404040; border-radius: 8px; padding-left: 2.75rem; font-size: 1rem;" />
+                </div>
+            </div>
+
+            <div class="edit-form-row">
+                <label for="edit-nombre" style="font-size: 0.85rem; font-weight: 600; color: #a3a3a3;">NOMBRE COMPLETO</label>
+                <div style="position: relative; display: flex; align-items: center;">
+                    <i class="pi pi-id-card" style="position: absolute; left: 1rem; color: #737373; z-index: 1;"></i>
+                    <input id="edit-nombre" pInputText [(ngModel)]="editData.nombre" placeholder="Tu nombre completo"
+                        style="width: 100%; height: 3rem; background: #000000; color: #ffffff; border: 1px solid #404040; border-radius: 8px; padding-left: 2.75rem; font-size: 1rem;" />
+                </div>
+            </div>
+
+            <div class="edit-form-two" style="display: flex; gap: 1rem;">
+                <div class="edit-form-col" style="flex: 1;">
+                    <label for="edit-telefono" style="font-size: 0.85rem; font-weight: 600; color: #a3a3a3;">TELÉFONO</label>
+                    <div style="position: relative; display: flex; align-items: center;">
+                        <i class="pi pi-phone" style="position: absolute; left: 1rem; color: #737373; z-index: 1;"></i>
+                        <input id="edit-telefono" pInputText [(ngModel)]="editData.telefono" placeholder="Ej: 5512345678"
+                            (keypress)="soloNumeros($event)" (paste)="onPegarTelefono($event)" maxlength="10"
+                            style="width: 100%; height: 3rem; background: #000000; color: #ffffff; border: 1px solid #404040; border-radius: 8px; padding-left: 2.75rem; font-size: 1rem;" />
+                    </div>
+                </div>
+                <div class="edit-form-col" style="flex: 1;">
+                    <label for="edit-fecha" style="font-size: 0.85rem; font-weight: 600; color: #a3a3a3;">FECHA DE NACIMIENTO</label>
+                    <div style="position: relative; display: flex; align-items: center; width: 100%;">
+                        <i class="pi pi-calendar" style="position: absolute; left: 1rem; color: #737373; z-index: 1;"></i>
+                        <p-datepicker id="edit-fecha" [(ngModel)]="editFechaNacimiento" [maxDate]="maxDate"
+                            dateFormat="dd/mm/yy" placeholder="dd/mm/aaaa" [showIcon]="false" styleClass="w-full black-theme-datepicker"
+                            inputStyleClass="w-full" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="edit-form-row">
+                <label for="edit-direccion" style="font-size: 0.85rem; font-weight: 600; color: #a3a3a3;">DIRECCIÓN</label>
+                <div style="position: relative; display: flex; align-items: center;">
+                    <i class="pi pi-map-marker" style="position: absolute; left: 1rem; color: #737373; z-index: 1;"></i>
+                    <input id="edit-direccion" pInputText [(ngModel)]="editData.direccion" placeholder="Tu dirección"
+                        style="width: 100%; height: 3rem; background: #000000; color: #ffffff; border: 1px solid #404040; border-radius: 8px; padding-left: 2.75rem; font-size: 1rem;" />
+                </div>
+            </div>
+
+            <div class="edit-form-row">
+                <label for="edit-password" style="font-size: 0.85rem; font-weight: 600; color: #a3a3a3;">CONTRASEÑA</label>
+                <div style="position: relative; display: flex; align-items: center; width: 100%;">
+                    <i class="pi pi-lock" style="position: absolute; left: 1rem; color: #737373; z-index: 1;"></i>
+                    <p-password id="edit-password" [(ngModel)]="editPassword" placeholder="Exactamente 10 caracteres"
+                        [toggleMask]="true" [feedback]="false" [maxLength]="10" styleClass="w-full black-theme-password" inputStyleClass="w-full" />
+                </div>
+            </div>
+
+            <div class="edit-form-row">
+                <label for="edit-confirmPassword" style="font-size: 0.85rem; font-weight: 600; color: #a3a3a3;">CONFIRMAR CONTRASEÑA</label>
+                <div style="position: relative; display: flex; align-items: center; width: 100%;">
+                    <i class="pi pi-lock" style="position: absolute; left: 1rem; color: #737373; z-index: 1;"></i>
+                    <p-password id="edit-confirmPassword" [(ngModel)]="editConfirmPassword"
+                        placeholder="Repite tu contraseña" [toggleMask]="true" [feedback]="false" styleClass="w-full black-theme-password"
+                        inputStyleClass="w-full" />
+                </div>
+            </div>
+        </div>
+
+        <ng-template #footer>
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; border-top: 1px solid #262626; padding-top: 1.5rem;">
+                <p-button label="Cancelar" icon="pi pi-times" severity="secondary" [text]="true"
+                    (onClick)="showEditDialog = false" [style]="{ 'color': '#ffffff' }" />
+                <p-button label="Guardar Cambios" icon="pi pi-check" severity="success" (onClick)="saveProfile()" [style]="{ 'border-radius': '8px', 'padding-left': '1.5rem', 'padding-right': '1.5rem', 'font-weight': '600' }" />
+            </div>
+        </ng-template>
+    </p-dialog>
+
+    <p-confirmDialog [style]="{width: '450px'}" styleClass="black-theme-dialog" acceptButtonStyleClass="p-button-danger p-button-sm" rejectButtonStyleClass="p-button-text p-button-sm p-button-secondary"></p-confirmDialog>
+
+</div>
+>>>>>>> 9da5e22e8d381878948c234f5992eb16a820adfb

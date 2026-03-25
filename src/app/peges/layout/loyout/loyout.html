@@ -1,6 +1,9 @@
 <!-- Sidebar -->
 <app-sidebar [visible]="sidebarVisible()" (closeSidebar)="closeSidebar()" />
 
+<!-- Logout Confirm Dialog -->
+<p-confirmDialog [style]="{ width: '400px' }" styleClass="black-theme-dialog" />
+
 <!-- Main wrapper -->
 <div class="layout-wrapper">
     <!-- Topbar -->
@@ -17,7 +20,7 @@
                 <span class="user-name">{{ userName }}</span>
             </div>
             <p-button icon="pi pi-sign-out" [text]="true" [rounded]="true" severity="danger" pTooltip="Cerrar sesión"
-                (click)="logout()" />
+                (click)="confirmLogout()" />
         </div>
     </header>
 

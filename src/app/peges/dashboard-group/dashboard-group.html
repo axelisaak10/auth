@@ -1,0 +1,86 @@
+<div class="dashboard-page">
+    <div class="header-info">
+        <h2 class="page-title"><i class="pi pi-chart-pie"></i> Dashboard del Grupo</h2>
+        <p class="page-subtitle">Resumen estadístico del espacio de trabajo</p>
+    </div>
+
+    <div class="header-actions mb-4">
+        <p-button label="Ir al Tablero Kanban" icon="pi pi-table" severity="primary" (onClick)="goToTickets()"></p-button>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-card total-card">
+            <div class="stat-icon"><i class="pi pi-ticket"></i></div>
+            <div class="stat-info">
+                <span class="stat-value">{{ total }}</span>
+                <span class="stat-label">Total de Tickets</span>
+            </div>
+        </div>
+        <div class="stat-card pendientes-card">
+            <div class="stat-icon"><i class="pi pi-clock"></i></div>
+            <div class="stat-info">
+                <span class="stat-value">{{ pendientes }}</span>
+                <span class="stat-label">Pendientes</span>
+            </div>
+        </div>
+        <div class="stat-card progreso-card">
+            <div class="stat-icon"><i class="pi pi-spinner pi-spin"></i></div>
+            <div class="stat-info">
+                <span class="stat-value">{{ enProgreso }}</span>
+                <span class="stat-label">En Progreso</span>
+            </div>
+        </div>
+        <div class="stat-card revision-card">
+            <div class="stat-icon"><i class="pi pi-exclamation-circle"></i></div>
+            <div class="stat-info">
+                <span class="stat-value">{{ bloqueados }}</span>
+                <span class="stat-label">En Revisión / Bloqueados</span>
+            </div>
+        </div>
+        <div class="stat-card hechos-card">
+            <div class="stat-icon"><i class="pi pi-check-circle"></i></div>
+            <div class="stat-info">
+                <span class="stat-value">{{ hechos }}</span>
+                <span class="stat-label">Hechos</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Tickets -->
+    <p-card styleClass="mt-4">
+        <ng-template #title>
+            <div class="flex align-items-center gap-2 mb-3">
+                <i class="pi pi-history text-xl text-primary"></i>
+                <span class="text-xl">Tickets Recientes</span>
+            </div>
+        </ng-template>
+        
+        <p-table [value]="recentTickets" styleClass="p-datatable-sm" [tableStyle]="{ 'min-width': '50rem' }">
+            <ng-template #header>
+                <tr>
+                    <th>ID / Título</th>
+                    <th>Estado</th>
+                    <th>Prioridad</th>
+                    <th>Asignado a</th>
+                    <th>Fecha Creación</th>
+                </tr>
+            </ng-template>
+            <ng-template #body let-t>
+                <tr>
+                    <td>
+                        <strong>{{ t.id }}</strong><br />
+                        <small>{{ t.titulo }}</small>
+                    </td>
+                    <td><p-tag [value]="t.estado" [severity]="getStatusSeverity(t.estado)"></p-tag></td>
+                    <td><p-tag [value]="t.prioridad" [severity]="getPrioritySeverity(t.prioridad)"></p-tag></td>
+                    <td>{{ t.asignadoA || 'Sin asignar' }}</td>
+                    <td>{{ t.fechaCreacion }}</td>
+                </tr>
+            </ng-template>
+            <ng-template #emptymessage>
+                <tr><td colspan="5">No hay tickets recientes en este grupo.</td></tr>
+            </ng-template>
+        </p-table>
+    </p-card>
+</div>

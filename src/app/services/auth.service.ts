@@ -1,6 +1,7 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+<<<<<<< HEAD
 import { Observable, tap } from 'rxjs';
 import { Permission } from '../models/permission.model';
 
@@ -17,6 +18,9 @@ export interface UserSession {
     permisos_globales?: Permission[];
     grupoId?: number;
 }
+=======
+import { UserSession } from '../models/types';
+>>>>>>> 9da5e22e8d381878948c234f5992eb16a820adfb
 
 export const MICROSERVICES = {
     users: 'http://localhost:3444',
@@ -29,11 +33,45 @@ export const MICROSERVICES = {
 })
 export class AuthService {
 
+<<<<<<< HEAD
     // Endpoints correspondientes al microservicio de Usuarios/Auth
     private apiAuth = `${MICROSERVICES.users}/auth/login`;
     private apiRegister = `${MICROSERVICES.users}/auth/register`;
     private apiUsers = `${MICROSERVICES.users}/users`;
     private apiPermissions = `${MICROSERVICES.users}/permissions`;
+=======
+    private readonly MOCK_USERS: UserSession[] = [
+        {
+            email: 'superadmin@seguridad.com',
+            nombre: 'Super Administrador',
+            usuario: 'super_admin',
+            telefono: '5512345678',
+            direccion: 'Sede Central',
+            fechaNacimiento: '1980-01-01',
+            permissions: ['MANAGE_GROUPS', 'MANAGE_BASIC_ADMINS', 'MANAGE_USERS_GLOBAL', 'VIEW_OWN_GROUP']
+        },
+        {
+            email: 'admin@seguridad.com',
+            nombre: 'Carlos Admin Básico',
+            usuario: 'admin_carlos',
+            telefono: '5512345679',
+            direccion: 'Sucursal Norte',
+            fechaNacimiento: '1995-06-15',
+            groupId: 'group-1',
+            permissions: ['VIEW_OWN_GROUP', 'MANAGE_GROUP_USERS', 'CREATE_TICKETS', 'EDIT_TICKETS_ALL', 'VIEW_OWN_TICKETS', 'group:add', 'group:edit', 'group:delete']
+        },
+        {
+            email: 'user@seguridad.com',
+            nombre: 'Normal Usuario',
+            usuario: 'normal_user',
+            telefono: '5512345680',
+            direccion: 'Remoto',
+            fechaNacimiento: '2000-01-01',
+            groupId: 'group-1',
+            permissions: ['VIEW_OWN_GROUP', 'VIEW_OWN_TICKETS', 'EDIT_TICKET_STATUS']
+        }
+    ];
+>>>>>>> 9da5e22e8d381878948c234f5992eb16a820adfb
 
     private _isLoggedIn = signal(this.checkStorage());
 
@@ -41,6 +79,7 @@ export class AuthService {
 
     constructor(private router: Router, private http: HttpClient) { }
 
+<<<<<<< HEAD
     login(credentials: any): Observable<any> {
         return this.http.post(this.apiAuth, credentials, { withCredentials: true })
             .pipe(
@@ -94,6 +133,17 @@ export class AuthService {
 
     updateUserByAdmin(userId: string, data: any): Observable<any> {
         return this.http.patch(`${this.apiUsers}/${userId}`, data, { withCredentials: true });
+=======
+    login(email: string, password: string): boolean {
+        // Simple mock login: any email listed in MOCK_USERS with password 'Admin123!@' works
+        const user = this.MOCK_USERS.find(u => u.email === email);
+        if (user && password === 'Admin123!@') {
+            localStorage.setItem('session', JSON.stringify(user));
+            this._isLoggedIn.set(true);
+            return true;
+        }
+        return false;
+>>>>>>> 9da5e22e8d381878948c234f5992eb16a820adfb
     }
 
     logout(): void {
@@ -104,7 +154,17 @@ export class AuthService {
 
     getUser(): UserSession | null {
         const data = localStorage.getItem('session');
-        return data ? JSON.parse(data) : null;
+        if (data) {
+            const parsed = JSON.parse(data) as UserSession;
+            // Sync permissions with mock data just in case of hot-reload or cached sessions
+            const mock = this.MOCK_USERS.find(u => u.email === parsed.email);
+            if (mock) {
+                parsed.permissions = mock.permissions;
+                parsed.groupId = mock.groupId; // Sync group as well
+            }
+            return parsed;
+        }
+        return null;
     }
 
     private checkStorage(): boolean {

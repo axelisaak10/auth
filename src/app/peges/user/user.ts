@@ -12,6 +12,7 @@ import { DatePicker } from 'primeng/datepicker';
 import { Password } from 'primeng/password';
 import { ConfirmDialog } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
+<<<<<<< HEAD
 import { TableModule } from 'primeng/table';
 import { Toolbar } from 'primeng/toolbar';
 import { Select } from 'primeng/select';
@@ -21,6 +22,14 @@ import { HasPermissionDirective } from '../../directives/has-permission.directiv
 import { PermissionService } from '../../services/permission.service';
 import { TicketItem } from '../group/group';
 import { MessageService } from 'primeng/api';
+=======
+import { AuthService } from '../../services/auth.service';
+import { PermissionService } from '../../services/permission.service';
+import { UserSession } from '../../models/types';
+import { HasPermissionDirective } from '../../directiva/directiva';
+import { TableModule } from 'primeng/table';
+import { ToolbarModule } from 'primeng/toolbar';
+>>>>>>> 9da5e22e8d381878948c234f5992eb16a820adfb
 
 @Component({
   selector: 'app-user',
@@ -37,11 +46,17 @@ import { MessageService } from 'primeng/api';
     DatePicker,
     Password,
     ConfirmDialog,
+<<<<<<< HEAD
     TableModule,
     Toolbar,
     Select,
     Tooltip,
     HasPermissionDirective,
+=======
+    HasPermissionDirective,
+    TableModule,
+    ToolbarModule
+>>>>>>> 9da5e22e8d381878948c234f5992eb16a820adfb
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './user.html',
@@ -75,6 +90,7 @@ export class User {
 
   constructor(
     private authService: AuthService,
+    private permissionService: PermissionService,
     private confirmationService: ConfirmationService,
     public ps: PermissionService,
     private messageService: MessageService,
@@ -113,6 +129,7 @@ export class User {
     return {
       id: '',
       email: '',
+<<<<<<< HEAD
       nombreCompleto: '',
       username: '',
       telefono: '',
@@ -122,6 +139,14 @@ export class User {
       last_login: '',
       permisos_globales: [],
       grupoId: 0,
+=======
+      nombre: '',
+      usuario: '',
+      telefono: '',
+      direccion: '',
+      fechaNacimiento: '',
+      permissions: []
+>>>>>>> 9da5e22e8d381878948c234f5992eb16a820adfb
     };
   }
 
@@ -321,4 +346,5 @@ export class User {
   reactivateAccount(): void {
     this.accountSuspended = false;
   }
+
 }
