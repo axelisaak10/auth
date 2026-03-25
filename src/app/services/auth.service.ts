@@ -19,7 +19,7 @@ export interface UserSession {
 }
 
 export const MICROSERVICES = {
-    users: 'http://localhost:3444',
+    users: 'https://back-end-users.vercel.app',
     groups: 'URL_PENDIENTE_GRUPOS',
     tickets: 'URL_PENDIENTE_TICKETS'
 };
