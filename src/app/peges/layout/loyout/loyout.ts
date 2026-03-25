@@ -17,7 +17,7 @@ export class Loyout {
   constructor(public authService: AuthService) { }
 
   get userName(): string {
-    return this.authService.getUser()?.nombre ?? 'Usuario';
+    return this.authService.getUser()?.nombreCompleto ?? 'Usuario';
   }
 
   get userInitial(): string {

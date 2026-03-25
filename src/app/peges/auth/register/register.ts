@@ -1,6 +1,6 @@
 import { Component, signal, computed } from '@angular/core';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Button } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
@@ -10,6 +10,7 @@ import { Message } from 'primeng/message';
 import { Toast } from 'primeng/toast';
 import { DatePicker } from 'primeng/datepicker';
 import { MessageService } from 'primeng/api';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-register',
@@ -53,7 +54,7 @@ export class Register {
 
   submitted = signal(false);
 
-  constructor(private messageService: MessageService) {
+  constructor(private messageService: MessageService, private authService: AuthService, private router: Router) {
     this.maxDate = new Date();
   }
 
@@ -117,13 +118,38 @@ export class Register {
       return;
     }
 
-    this.messageService.add({
-      severity: 'success',
-      summary: '¡Registro exitoso!',
-      detail: 'Tu cuenta ha sido creada correctamente.',
-      life: 4000,
-    });
+    const val = this.registerForm.value;
+    const userData = {
+      nombreCompleto: val.nombreCompleto,
+      username: val.usuario,
+      email: val.email,
+      password: val.password,
+      direccion: val.direccion,
+      telefono: val.telefono,
+    };
 
-    console.log('Register:', this.registerForm.value);
+    this.authService.registerPublic(userData).subscribe({
+      next: (res: any) => {
+        this.messageService.add({
+          severity: 'success',
+          summary: '¡Registro exitoso!',
+          detail: 'Tu cuenta ha sido creada correctamente.',
+          life: 4000,
+        });
+        
+        setTimeout(() => {
+          this.router.navigate(['/auth/login']);
+        }, 1500);
+      },
+      error: (err: any) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error en el registro',
+          detail: 'No se pudo crear la cuenta. Intenta con otro correo o verifica tus datos.',
+          life: 4000,
+        });
+        console.error('Error al registrar:', err);
+      }
+    });
   }
 }

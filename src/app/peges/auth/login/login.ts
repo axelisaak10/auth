@@ -68,24 +68,27 @@ export class Login {
     const email = this.loginForm.value.email!;
     const password = this.loginForm.value.password!;
 
-    if (this.authService.login(email, password)) {
-      this.messageService.add({
-        severity: 'success',
-        summary: '¡Bienvenido!',
-        detail: 'Inicio de sesión exitoso.',
-        life: 2000,
-      });
+    this.authService.login({ email, password }).subscribe({
+      next: (res: any) => {
+        this.messageService.add({
+          severity: 'success',
+          summary: '¡Bienvenido!',
+          detail: 'Inicio de sesión exitoso.',
+          life: 2000,
+        });
 
-      setTimeout(() => {
-        this.router.navigate(['/home']);
-      }, 800);
-    } else {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Credenciales incorrectas',
-        detail: 'El correo o la contraseña no son válidos.',
-        life: 4000,
-      });
-    }
+        setTimeout(() => {
+          this.router.navigate(['/home']);
+        }, 800);
+      },
+      error: (err: any) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Credenciales incorrectas',
+          detail: 'El correo o la contraseña no son válidos.',
+          life: 4000,
+        });
+      }
+    });
   }
 }

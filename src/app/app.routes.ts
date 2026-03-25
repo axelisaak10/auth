@@ -32,6 +32,10 @@ export const routes: Routes = [
                 path: 'group',
                 loadComponent: () => import('./peges/group/group').then(m => m.Group),
             },
+            {
+                path: 'admin-users',
+                loadComponent: () => import('./peges/admin-users/admin-users').then(m => m.AdminUsers),
+            },
         ],
     },
 ];

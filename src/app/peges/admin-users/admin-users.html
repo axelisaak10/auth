@@ -1,0 +1,229 @@
+<!-- Solo accesible para usuarios con permiso user:manage -->
+<ng-container *appHasPermission="'user:manage'">
+    <p-toast />
+    <div class="admin-users-page">
+        <!-- Header -->
+        <div class="admin-header">
+            <div class="header-info">
+                <h2 class="page-title">
+                    <i class="pi pi-shield"></i>
+                    Gestión de Usuarios
+                </h2>
+                <p class="page-subtitle">Administra usuarios, permisos y perfiles</p>
+            </div>
+            <div class="header-stats">
+                <div class="stat-card">
+                    <i class="pi pi-users"></i>
+                    <div class="stat-content">
+                        <span class="stat-value">{{ allUsers.length }}</span>
+                        <span class="stat-label">Usuarios</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toolbar con búsqueda -->
+        <p-toolbar styleClass="admin-toolbar">
+            <ng-template #start>
+                <span class="toolbar-title">Listado de Usuarios</span>
+                <p-iconfield class="search-field" style="margin-left: 1rem;">
+                    <p-inputicon styleClass="pi pi-search" />
+                    <input type="text" pInputText [(ngModel)]="searchText"
+                        placeholder="Buscar por nombre, email o usuario..." style="width: 300px;" />
+                </p-iconfield>
+            </ng-template>
+            <ng-template #end>
+                <ng-container *appHasPermission="'user:add'">
+                    <p-button label="Nuevo Usuario" icon="pi pi-user-plus" severity="primary"
+                        (onClick)="openNewUser()" />
+                </ng-container>
+            </ng-template>
+        </p-toolbar>
+
+        <p-table [value]="filteredUsers" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 20]"
+            [tableStyle]="{ 'min-width': '60rem' }" [scrollable]="true" styleClass="admin-table" [rowHover]="true"
+            [showCurrentPageReport]="true" [loading]="isLoading"
+            currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} usuarios">
+            <ng-template #header>
+                <tr>
+                    <th pSortableColumn="nombre_completo" style="width: 20%">Nombre <p-sortIcon
+                            field="nombre_completo" /></th>
+                    <th pSortableColumn="username" style="width: 10%">Usuario <p-sortIcon field="username" /></th>
+                    <th pSortableColumn="email" style="width: 18%">Email <p-sortIcon field="email" /></th>
+                    <th style="width: 10%">Teléfono</th>
+                    <th style="width: 10%">Último acceso</th>
+                    <th style="width: 16%">Permisos</th>
+                    <th style="width: 16%">Acciones</th>
+                </tr>
+            </ng-template>
+            <ng-template #body let-user>
+                <tr>
+                    <td><span class="user-name-cell">{{ user.nombre_completo }}</span></td>
+                    <td><span class="user-username-cell">&#64;{{ user.username }}</span></td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.telefono || '—' }}</td>
+                    <td>{{ formatLastLogin(user.last_login) }}</td>
+                    <td>
+                        <div class="permisos-cell">
+                            @for (perm of $any(user.permisos_globales | slice:0:2); track perm) {
+                            <p-tag [value]="perm" severity="secondary" />
+                            }
+                            @if (user.permisos_globales?.length > 2) {
+                            <p-tag [value]="'+' + (user.permisos_globales.length - 2) + ' más'" severity="warn" />
+                            }
+                            @if (!user.permisos_globales || user.permisos_globales.length === 0) {
+                            <p-tag value="Sin permisos" severity="danger" />
+                            }
+                        </div>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <ng-container *appHasPermission="'user:edit'">
+                                <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info"
+                                    pTooltip="Editar usuario" (onClick)="editUser(user)" />
+                            </ng-container>
+                            <ng-container *appHasPermission="'user:manage'">
+                                <p-button icon="pi pi-key" [rounded]="true" [text]="true" severity="warn"
+                                    pTooltip="Gestionar permisos" (onClick)="openPermissions(user)" />
+                            </ng-container>
+                            <ng-container *appHasPermission="'user:delete'">
+                                <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger"
+                                    pTooltip="Eliminar usuario" (onClick)="deleteUser(user)" />
+                            </ng-container>
+                        </div>
+                    </td>
+                </tr>
+            </ng-template>
+            <ng-template #emptymessage>
+                <tr>
+                    <td colspan="7">
+                        <div class="empty-message">
+                            <i class="pi pi-inbox"></i>
+                            @if (searchText) {
+                            <span>No se encontraron usuarios con "{{ searchText }}"</span>
+                            } @else {
+                            <span>No hay usuarios registrados</span>
+                            }
+                        </div>
+                    </td>
+                </tr>
+            </ng-template>
+        </p-table>
+
+        <!-- ===== Create/Edit User Dialog ===== -->
+        <p-dialog [(visible)]="showUserDialog"
+            [header]="editUserMode ? 'Editar Usuario' : 'Nuevo Usuario'" [modal]="true"
+            [draggable]="false" [resizable]="false" styleClass="admin-dialog" [style]="{ width: '600px' }">
+            <div class="dialog-form">
+                <div class="form-row">
+                    <label for="u-nombre">Nombre completo <span class="required-label">*</span></label>
+                    <input id="u-nombre" pInputText [(ngModel)]="selectedUser.nombre_completo"
+                        placeholder="Nombre completo" class="form-input" />
+                </div>
+                <div class="form-row-two">
+                    <div class="form-col">
+                        <label for="u-usuario">Usuario <span class="required-label">*</span></label>
+                        <input id="u-usuario" pInputText [(ngModel)]="selectedUser.username"
+                            placeholder="usuario" class="form-input" />
+                    </div>
+                    <div class="form-col">
+                        <label for="u-email">Email <span class="required-label">*</span></label>
+                        <input id="u-email" type="email" pInputText [(ngModel)]="selectedUser.email"
+                            placeholder="email@ejemplo.com" class="form-input" />
+                    </div>
+                </div>
+                <div class="form-row-two">
+                    <div class="form-col">
+                        <label for="u-telefono">Teléfono</label>
+                        <input id="u-telefono" pInputText [(ngModel)]="selectedUser.telefono"
+                            placeholder="5512345678" class="form-input" maxlength="10"
+                            (keypress)="soloNumeros($event)" />
+                    </div>
+                    <div class="form-col">
+                        <label for="u-fecha">Fecha de Nacimiento</label>
+                        <p-datepicker id="u-fecha" [(ngModel)]="editFechaNacimiento" [maxDate]="maxDate"
+                            dateFormat="dd/mm/yy" placeholder="dd/mm/aaaa" [showIcon]="true"
+                            styleClass="w-full" inputStyleClass="w-full" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <label for="u-direccion">Dirección</label>
+                    <input id="u-direccion" pInputText [(ngModel)]="selectedUser.direccion"
+                        placeholder="Dirección completa" class="form-input" />
+                </div>
+                <div class="form-row-two">
+                    <div class="form-col">
+                        <label for="u-password">{{ editUserMode ? 'Nueva Contraseña' : 'Contraseña' }}
+                            @if (!editUserMode) { <span class="required-label">*</span> }
+                        </label>
+                        <p-password id="u-password" [(ngModel)]="editPassword"
+                            [placeholder]="editUserMode ? 'Dejar vacío para no cambiar' : 'Contraseña'"
+                            [toggleMask]="true" styleClass="w-full" inputStyleClass="w-full" />
+                    </div>
+                    <div class="form-col">
+                        <label for="u-confirm">Confirmar Contraseña</label>
+                        <p-password id="u-confirm" [(ngModel)]="editConfirmPassword"
+                            placeholder="Repetir contraseña" [toggleMask]="true" [feedback]="false"
+                            styleClass="w-full" inputStyleClass="w-full" />
+                    </div>
+                </div>
+            </div>
+            <ng-template #footer>
+                <div class="dialog-footer">
+                    <p-button label="Cancelar" icon="pi pi-times" severity="secondary" [text]="true"
+                        (onClick)="showUserDialog = false" />
+                    <p-button [label]="editUserMode ? 'Actualizar' : 'Crear Usuario'"
+                        [icon]="editUserMode ? 'pi pi-check' : 'pi pi-save'" severity="primary"
+                        [loading]="isSaving" (onClick)="saveUser()" />
+                </div>
+            </ng-template>
+        </p-dialog>
+
+        <!-- ===== Permissions Management Dialog ===== -->
+        @if (showPermissionsDialog) {
+        <p-dialog [(visible)]="showPermissionsDialog" header="Gestionar Permisos" [modal]="true"
+            [draggable]="false" [resizable]="false" styleClass="admin-dialog" [style]="{ width: '600px' }">
+            <div class="dialog-form">
+                <div class="form-row">
+                    <label>Usuario</label>
+                    <span class="user-readonly-value">
+                        <i class="pi pi-user" style="margin-right: 0.4rem;"></i>
+                        {{ permissionsUser.nombre_completo }} (&#64;{{ permissionsUser.username }})
+                    </span>
+                </div>
+                <div class="form-row">
+                    <label>Permisos disponibles</label>
+                    <div class="permissions-grid">
+                        @for (perm of allPermissions; track perm) {
+                        <div class="permission-item" [class.permission-active]="hasPermissionCheck(perm)"
+                            (click)="togglePermission(perm)">
+                            <input type="checkbox" [checked]="hasPermissionCheck(perm)"
+                                (change)="togglePermission(perm)" style="accent-color: var(--p-primary-color); width: 18px; height: 18px; cursor: pointer;" />
+                            <span class="permission-label">{{ perm }}</span>
+                        </div>
+                        }
+                    </div>
+                </div>
+            </div>
+            <ng-template #footer>
+                <div class="dialog-footer">
+                    <p-button label="Cancelar" icon="pi pi-times" severity="secondary" [text]="true"
+                        (onClick)="showPermissionsDialog = false" />
+                    <p-button label="Guardar Permisos" icon="pi pi-check" severity="primary"
+                        [loading]="isSavingPerms" (onClick)="savePermissions()" />
+                </div>
+            </ng-template>
+        </p-dialog>
+        }
+
+        <p-confirmDialog />
+    </div>
+</ng-container>
+
+@if (!ps.hasPermission('user:manage')) {
+<div class="no-permission-message">
+    <i class="pi pi-lock"></i>
+    <h3>Acceso Denegado</h3>
+    <p>Necesitas el permiso <strong>user:manage</strong> para acceder a esta sección.</p>
+</div>
+}

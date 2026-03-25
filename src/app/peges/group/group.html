@@ -1,177 +1,669 @@
-<div class="group-page">
-    <!-- Header Section -->
-    <div class="group-header">
-        <div class="header-info">
-            <h2 class="page-title">
-                <i class="pi pi-users"></i>
-                Gestión de Grupos
-            </h2>
-            <p class="page-subtitle">Administra los grupos, sus integrantes y tickets asignados</p>
-        </div>
-        <div class="header-stats">
-            <div class="stat-card">
-                <i class="pi pi-users"></i>
-                <div class="stat-content">
-                    <span class="stat-value">{{ groups.length }}</span>
-                    <span class="stat-label">Grupos</span>
-                </div>
-            </div>
-            <div class="stat-card">
-                <i class="pi pi-user"></i>
-                <div class="stat-content">
-                    <span class="stat-value">{{ totalIntegrantes }}</span>
-                    <span class="stat-label">Integrantes</span>
-                </div>
-            </div>
-            <div class="stat-card">
-                <i class="pi pi-ticket"></i>
-                <div class="stat-content">
-                    <span class="stat-value">{{ totalTickets }}</span>
-                    <span class="stat-label">Tickets</span>
-                </div>
-            </div>
-        </div>
-    </div>
+<!-- Toda la página requiere permiso group:view (admin) O group:view (usuario normal) -->
+<ng-container *appHasPermission="['group:view', 'group:view']">
+    <div class="group-page">
 
-    <!-- Toolbar -->
-    <p-toolbar styleClass="group-toolbar">
-        <ng-template #start>
-            <span class="toolbar-title">Listado de Grupos</span>
-        </ng-template>
-        <ng-template #end>
-            <p-button label="Nuevo Grupo" icon="pi pi-plus" severity="primary" (onClick)="openNew()" />
-        </ng-template>
-    </p-toolbar>
 
-    <!-- Data Table -->
-    <p-table [value]="groups" [paginator]="true" [rows]="5" [rowsPerPageOptions]="[5, 10, 20]"
-        [tableStyle]="{ 'min-width': '50rem' }" [scrollable]="true" styleClass="group-table" [rowHover]="true"
-        [showCurrentPageReport]="true" currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} grupos">
-        <ng-template #header>
-            <tr>
-                <th pSortableColumn="nivel" style="width: 10%">
-                    Nivel <p-sortIcon field="nivel" />
-                </th>
-                <th pSortableColumn="autoridad" style="width: 15%">
-                    Autoridad <p-sortIcon field="autoridad" />
-                </th>
-                <th pSortableColumn="nombre" style="width: 15%">
-                    Nombre <p-sortIcon field="nombre" />
-                </th>
-                <th style="width: 12%">Integrantes</th>
-                <th style="width: 12%">Tickets</th>
-                <th style="width: 26%">Descripción</th>
-                <th style="width: 10%">Acciones</th>
-            </tr>
-        </ng-template>
-        <ng-template #body let-group>
-            <tr>
-                <td>
-                    <p-tag [value]="group.nivel" [severity]="getNivelSeverity(group.nivel)" />
-                </td>
-                <td>
-                    <div class="authority-cell">
-                        <i class="pi pi-shield"></i>
-                        <span>{{ group.autoridad }}</span>
+        <!-- Header Section -->
+        <div class="group-header">
+            <div class="header-info">
+                <h2 class="page-title">
+                    <i class="pi pi-users"></i>
+                    Gestión de Grupos
+                </h2>
+                <p class="page-subtitle">Administra los grupos, sus integrantes y tickets asignados</p>
+            </div>
+            <div class="header-stats">
+                <div class="stat-card">
+                    <i class="pi pi-users"></i>
+                    <div class="stat-content">
+                        <span class="stat-value">{{ groups.length }}</span>
+                        <span class="stat-label">Grupos</span>
                     </div>
-                </td>
-                <td>
-                    <span class="group-name">{{ group.nombre }}</span>
-                </td>
-                <td>
-                    <div class="badge-cell">
-                        <span class="badge badge-members">
-                            <i class="pi pi-user"></i>
-                            {{ group.integrantes }}
-                        </span>
+                </div>
+                <div class="stat-card">
+                    <i class="pi pi-user"></i>
+                    <div class="stat-content">
+                        <span class="stat-value">{{ totalIntegrantes }}</span>
+                        <span class="stat-label">Integrantes</span>
                     </div>
-                </td>
-                <td>
-                    <div class="badge-cell">
-                        <span class="badge badge-tickets">
-                            <i class="pi pi-ticket"></i>
-                            {{ group.tickets }}
-                        </span>
+                </div>
+                <div class="stat-card">
+                    <i class="pi pi-ticket"></i>
+                    <div class="stat-content">
+                        <span class="stat-value">{{ totalTickets }}</span>
+                        <span class="stat-label">Tickets</span>
                     </div>
-                </td>
-                <td>
-                    <span class="description-text">{{ group.descripcion }}</span>
-                </td>
-                <td>
-                    <div class="action-buttons">
-                        <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info" pTooltip="Editar"
-                            (onClick)="editGroup(group)" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Toolbar -->
+        <p-toolbar styleClass="group-toolbar">
+            <ng-template #start>
+                <span class="toolbar-title">Listado de Grupos</span>
+            </ng-template>
+            <ng-template #end>
+                <ng-container *appHasPermission="['group:add', 'group:add']">
+                    <p-button label="Nuevo Grupo" icon="pi pi-plus" severity="primary" (onClick)="openNew()" />
+                </ng-container>
+            </ng-template>
+        </p-toolbar>
+
+        <!-- Data Table - Grupos -->
+        <p-table [value]="groups" [paginator]="true" [rows]="5" [rowsPerPageOptions]="[5, 10, 20]"
+            [tableStyle]="{ 'min-width': '50rem' }" [scrollable]="true" styleClass="group-table" [rowHover]="true"
+            [showCurrentPageReport]="true"
+            currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} grupos">
+            <ng-template #header>
+                <tr>
+                    <th pSortableColumn="nivel" style="width: 10%">
+                        Nivel <p-sortIcon field="nivel" />
+                    </th>
+                    <th pSortableColumn="autoridad" style="width: 15%">
+                        Autoridad <p-sortIcon field="autoridad" />
+                    </th>
+                    <th pSortableColumn="nombre" style="width: 15%">
+                        Nombre <p-sortIcon field="nombre" />
+                    </th>
+                    <th style="width: 10%">Integrantes</th>
+                    <th style="width: 10%">Tickets</th>
+                    <th [style.width]="hasGroupActions ? '20%' : '40%'">Descripción</th>
+                    @if (hasGroupActions) {
+                    <th style="width: 20%">Acciones</th>
+                    }
+                </tr>
+            </ng-template>
+            <ng-template #body let-group>
+                <tr>
+                    <td>
+                        <p-tag [value]="group.nivel" [severity]="getNivelSeverity(group.nivel)" />
+                    </td>
+                    <td>
+                        <div class="authority-cell">
+                            <i class="pi pi-shield"></i>
+                            <span>{{ group.autoridad }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="group-name">{{ group.nombre }}</span>
+                    </td>
+                    <td>
+                        <div class="badge-cell">
+                            <span class="badge badge-members">
+                                <i class="pi pi-user"></i>
+                                {{ group.integrantes }}
+                            </span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="badge-cell">
+                            <span class="badge badge-tickets">
+                                <i class="pi pi-ticket"></i>
+                                {{ group.tickets }}
+                            </span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="description-text">{{ group.descripcion }}</span>
+                    </td>
+                    @if (hasGroupActions) {
+                    <td>
+                        <div class="action-buttons">
+                            <!-- Editar Grupo (admin) -->
+                            @if (ps.hasAnyPermission('group:edit', 'group:edit')) {
+                            <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info"
+                                pTooltip="Editar Grupo" (onClick)="editGroup(group)" />
+                            }
+                            <!-- Eliminar Grupo (admin) -->
+                            @if (ps.hasAnyPermission('group:delete', 'group:delete')) {
+                            <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger"
+                                pTooltip="Eliminar Grupo" (onClick)="deleteGroup(group)" />
+                            }
+                            <!-- Agregar Persona -->
+                            @if (ps.hasPermission('user:add')) {
+                            <p-button icon="pi pi-user-plus" [rounded]="true" [text]="true" severity="success"
+                                pTooltip="Agregar Persona" (onClick)="openAddMember(group.id)" />
+                            }
+                            <!-- Ver/Eliminar Persona -->
+                            @if (ps.hasPermission('user:delete')) {
+                            <p-button icon="pi pi-user-minus" [rounded]="true" [text]="true" severity="warn"
+                                pTooltip="Ver / Eliminar Persona" (onClick)="toggleMembers(group.id)" />
+                            }
+                            <!-- Crear Ticket -->
+                            @if (ps.hasAnyPermission('ticket:add', 'ticket:add')) {
+                            <p-button icon="pi pi-plus-circle" [rounded]="true" [text]="true" severity="info"
+                                pTooltip="Crear Ticket" (onClick)="openNewTicket(group.id)" />
+                            }
+                        </div>
+                    </td>
+                    }
+                </tr>
+            </ng-template>
+            <ng-template #emptymessage>
+                <tr>
+                    <td [attr.colspan]="hasGroupActions ? 7 : 6">
+                        <div class="empty-message">
+                            <i class="pi pi-inbox"></i>
+                            <span>No hay grupos registrados</span>
+                        </div>
+                    </td>
+                </tr>
+            </ng-template>
+        </p-table>
+
+        <!-- ===== Integrantes del grupo (expandible, requiere permiso) ===== -->
+        @for (group of groups; track group.id) {
+        @if (expandedGroupId === group.id && ps.hasAnyPermission('user:manage', 'user:manage', 'user:delete')) {
+        <div class="members-section">
+            <p-toolbar styleClass="group-toolbar">
+                <ng-template #start>
+                    <span class="toolbar-title">
+                        <i class="pi pi-user"></i>
+                        Integrantes — {{ group.nombre }}
+                    </span>
+                </ng-template>
+                <ng-template #end>
+                    @if (ps.hasPermission('user:add')) {
+                    <p-button label="Agregar" icon="pi pi-user-plus" severity="success" size="small"
+                        (onClick)="openAddMember(group.id)" />
+                    }
+                </ng-template>
+            </p-toolbar>
+
+            <div class="members-grid">
+                @for (member of getMembersByGroup(group.id); track member.id) {
+                <div class="member-card">
+                    <div class="member-avatar">
+                        <i class="pi pi-user"></i>
+                    </div>
+                    <div class="member-info">
+                        <span class="member-name">{{ member.nombre }}</span>
+                        <span class="member-email">{{ member.email }}</span>
+                    </div>
+                    @if (ps.hasPermission('user:delete')) {
+                    <div class="member-actions">
                         <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger"
-                            pTooltip="Eliminar" (onClick)="deleteGroup(group)" />
+                            pTooltip="Eliminar del grupo" (onClick)="removeMember(member, group.id)" />
                     </div>
-                </td>
-            </tr>
-        </ng-template>
-        <ng-template #emptymessage>
-            <tr>
-                <td colspan="7">
-                    <div class="empty-message">
-                        <i class="pi pi-inbox"></i>
-                        <span>No hay grupos registrados</span>
-                    </div>
-                </td>
-            </tr>
-        </ng-template>
-    </p-table>
+                    }
+                </div>
+                } @empty {
+                <div class="empty-message">
+                    <i class="pi pi-users"></i>
+                    <span>No hay integrantes en este grupo</span>
+                </div>
+                }
+            </div>
+        </div>
+        }
+        }
 
-    <!-- Add/Edit Dialog -->
-    <p-dialog [(visible)]="showDialog" [header]="editMode ? 'Editar Grupo' : 'Nuevo Grupo'" [modal]="true"
-        [draggable]="false" [resizable]="false" styleClass="group-dialog" [style]="{ width: '520px' }">
-        <div class="dialog-form">
-            <div class="form-row">
-                <label for="nombre">Nombre</label>
-                <input id="nombre" pInputText [(ngModel)]="selectedGroup.nombre" placeholder="Nombre del grupo"
-                    class="form-input" />
+        <!-- ===== Tickets del grupo ===== -->
+        @for (group of groups; track group.id) {
+        @if (ps.hasAnyPermission('ticket:view', 'ticket:view') && getTicketsByGroup(group.id).length > 0) {
+        <div class="tickets-section">
+            <p-toolbar styleClass="group-toolbar">
+                <ng-template #start>
+                    <span class="toolbar-title">
+                        <i class="pi pi-ticket"></i>
+                        Tickets — {{ group.nombre }}
+                    </span>
+                </ng-template>
+                <ng-template #end>
+                    <!-- View Mode Toggle -->
+                    <div class="view-toggle">
+                        <p-button icon="pi pi-th-large" [text]="true" [severity]="viewMode === 'kanban' ? 'primary' : 'secondary'"
+                            pTooltip="Vista Kanban" (onClick)="viewMode = 'kanban'" size="small" />
+                        <p-button icon="pi pi-list" [text]="true" [severity]="viewMode === 'list' ? 'primary' : 'secondary'"
+                            pTooltip="Vista Lista" (onClick)="viewMode = 'list'" size="small" />
+                    </div>
+                </ng-template>
+            </p-toolbar>
+
+            <!-- ===== Filtros Rápidos ===== -->
+            <div class="quick-filters">
+                <p-button [label]="'Todos'" size="small" [outlined]="activeFilter !== 'all'"
+                    [severity]="activeFilter === 'all' ? 'primary' : 'secondary'" (onClick)="setFilter('all')" />
+                <p-button label="Mis tickets" size="small" icon="pi pi-user" [outlined]="activeFilter !== 'mine'"
+                    [severity]="activeFilter === 'mine' ? 'primary' : 'secondary'" (onClick)="setFilter('mine')" />
+                <p-button label="Sin asignar" size="small" icon="pi pi-question-circle" [outlined]="activeFilter !== 'unassigned'"
+                    [severity]="activeFilter === 'unassigned' ? 'primary' : 'secondary'" (onClick)="setFilter('unassigned')" />
+                <p-button label="Prioridad alta" size="small" icon="pi pi-exclamation-triangle" [outlined]="activeFilter !== 'high'"
+                    [severity]="activeFilter === 'high' ? 'warn' : 'secondary'" (onClick)="setFilter('high')" />
             </div>
 
-            <div class="form-row-two">
-                <div class="form-col">
-                    <label for="nivel">Nivel</label>
-                    <p-select id="nivel" [options]="nivelesOptions" [(ngModel)]="selectedGroup.nivel"
-                        placeholder="Seleccionar nivel" styleClass="form-input" />
+            <!-- ===== Vista Kanban ===== -->
+            @if (viewMode === 'kanban') {
+
+            <!-- Kanban para usuario normal (solo estado) -->
+            @if (isStatusOnlyEdit) {
+            <div class="kanban-board">
+                @for (col of estadoOptions; track col.value) {
+                <div class="kanban-column">
+                    <div class="kanban-column-header" [ngClass]="'kanban-header-' + col.value">
+                        <span class="kanban-column-title">{{ col.label }}</span>
+                        <span class="kanban-column-count">{{ getTicketsByGroupAndStatus(group.id, col.value).length }}</span>
+                    </div>
+                    <div class="kanban-column-body"
+                        (dragover)="onDragOver($event)"
+                        (dragenter)="onDragEnter($event)"
+                        (dragleave)="onDragLeave($event)"
+                        (drop)="onDrop($event, col.value)">
+                        @for (ticket of getTicketsByGroupAndStatus(group.id, col.value); track ticket.id) {
+                        <div class="kanban-card" [ngClass]="'kanban-card-' + ticket.prioridad"
+                            draggable="true"
+                            (dragstart)="onDragStart($event, ticket)"
+                            (dragend)="onDragEnd($event)">
+                            <div class="kanban-card-header">
+                                <span class="kanban-card-title">{{ ticket.titulo }}</span>
+                                <p-tag [value]="ticket.prioridad" [severity]="getPrioridadSeverity(ticket.prioridad)"
+                                    class="kanban-card-priority" />
+                            </div>
+                            <p class="kanban-card-desc">{{ ticket.descripcion }}</p>
+                            <div class="kanban-card-meta">
+                                <span class="kanban-card-assignee">
+                                    <i class="pi pi-user"></i>
+                                    {{ ticket.asignadoA || 'Sin asignar' }}
+                                </span>
+                                <span class="kanban-card-date">
+                                    <i class="pi pi-calendar"></i>
+                                    {{ ticket.fechaLimite ? (ticket.fechaLimite | date:'dd/MM/yyyy') : 'Sin fecha' }}
+                                </span>
+                            </div>
+                            <div class="kanban-card-creator">
+                                <i class="pi pi-pencil"></i> Creado por: {{ ticket.creadoPor }}
+                            </div>
+                            <div class="kanban-card-actions">
+                                <p-button icon="pi pi-sync" label="Cambiar Estado" [text]="true" severity="info"
+                                    size="small" (onClick)="editTicketStatus(ticket)" />
+                            </div>
+                        </div>
+                        } @empty {
+                        <div class="kanban-empty">
+                            <i class="pi pi-inbox"></i>
+                            <span>Sin tickets</span>
+                        </div>
+                        }
+                    </div>
                 </div>
-                <div class="form-col">
-                    <label for="autoridad">Autoridad</label>
-                    <input id="autoridad" pInputText [(ngModel)]="selectedGroup.autoridad" placeholder="Autoridad"
+                }
+            </div>
+            }
+
+            <!-- Kanban para admin (edición completa) -->
+            @if (!isStatusOnlyEdit) {
+            <div class="kanban-board">
+                @for (col of estadoOptions; track col.value) {
+                <div class="kanban-column">
+                    <div class="kanban-column-header" [ngClass]="'kanban-header-' + col.value">
+                        <span class="kanban-column-title">{{ col.label }}</span>
+                        <span class="kanban-column-count">{{ getTicketsByGroupAndStatus(group.id, col.value).length }}</span>
+                    </div>
+                    <div class="kanban-column-body"
+                        (dragover)="onDragOver($event)"
+                        (dragenter)="onDragEnter($event)"
+                        (dragleave)="onDragLeave($event)"
+                        (drop)="onDrop($event, col.value)">
+                        @for (ticket of getTicketsByGroupAndStatus(group.id, col.value); track ticket.id) {
+                        <div class="kanban-card" [ngClass]="'kanban-card-' + ticket.prioridad"
+                            draggable="true"
+                            (dragstart)="onDragStart($event, ticket)"
+                            (dragend)="onDragEnd($event)">
+                            <div class="kanban-card-header">
+                                <span class="kanban-card-title">{{ ticket.titulo }}</span>
+                                <p-tag [value]="ticket.prioridad" [severity]="getPrioridadSeverity(ticket.prioridad)"
+                                    class="kanban-card-priority" />
+                            </div>
+                            <p class="kanban-card-desc">{{ ticket.descripcion }}</p>
+                            <div class="kanban-card-meta">
+                                <span class="kanban-card-assignee">
+                                    <i class="pi pi-user"></i>
+                                    {{ ticket.asignadoA || 'Sin asignar' }}
+                                </span>
+                                <span class="kanban-card-date">
+                                    <i class="pi pi-calendar"></i>
+                                    {{ ticket.fechaLimite ? (ticket.fechaLimite | date:'dd/MM/yyyy') : 'Sin fecha' }}
+                                </span>
+                            </div>
+                            <div class="kanban-card-creator">
+                                <i class="pi pi-pencil"></i> Creado por: {{ ticket.creadoPor }}
+                            </div>
+                            <div class="kanban-card-actions">
+                                <!-- Editar ticket (admin o creador) -->
+                                @if (canFullEditTicket(ticket)) {
+                                <p-button icon="pi pi-pencil" label="Editar" [text]="true" severity="info"
+                                    size="small" (onClick)="editTicket(ticket)" />
+                                } @else if (canStatusEditTicket(ticket)) {
+                                <p-button icon="pi pi-sync" label="Estado" [text]="true" severity="info"
+                                    size="small" (onClick)="editTicketStatus(ticket)" />
+                                }
+                                <!-- Eliminar ticket (admin) -->
+                                @if (ps.hasAnyPermission('ticket:delete')) {
+                                <p-button icon="pi pi-trash" label="Eliminar" [text]="true" severity="danger"
+                                    size="small" (onClick)="deleteTicket(ticket)" />
+                                }
+                            </div>
+                        </div>
+                        } @empty {
+                        <div class="kanban-empty">
+                            <i class="pi pi-inbox"></i>
+                            <span>Sin tickets</span>
+                        </div>
+                        }
+                    </div>
+                </div>
+                }
+            </div>
+            }
+
+            } <!-- fin viewMode kanban -->
+
+            <!-- ===== Vista Lista de Tickets ===== -->
+            @if (viewMode === 'list') {
+            <p-table [value]="getTicketsByGroup(group.id)" [paginator]="true" [rows]="10"
+                [rowsPerPageOptions]="[5, 10, 20]" [tableStyle]="{ 'min-width': '60rem' }"
+                styleClass="tickets-list-table" [rowHover]="true" [showCurrentPageReport]="true"
+                currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} tickets"
+                [sortField]="'titulo'" [sortOrder]="1">
+                <ng-template #header>
+                    <tr>
+                        <th pSortableColumn="id" style="width: 6%">ID <p-sortIcon field="id" /></th>
+                        <th pSortableColumn="titulo" style="width: 22%">Título <p-sortIcon field="titulo" /></th>
+                        <th pSortableColumn="estado" style="width: 14%">Estado <p-sortIcon field="estado" /></th>
+                        <th pSortableColumn="asignadoA" style="width: 14%">Asignado a <p-sortIcon field="asignadoA" /></th>
+                        <th pSortableColumn="prioridad" style="width: 12%">Prioridad <p-sortIcon field="prioridad" /></th>
+                        <th style="width: 10%">Creado por</th>
+                        <th pSortableColumn="fechaLimite" style="width: 12%">Fecha Límite <p-sortIcon field="fechaLimite" /></th>
+                        <th style="width: 10%">Acciones</th>
+                    </tr>
+                </ng-template>
+                <ng-template #body let-ticket>
+                    <tr>
+                        <td><span class="ticket-id">#{{ ticket.id }}</span></td>
+                        <td><span class="ticket-title-cell">{{ ticket.titulo }}</span></td>
+                        <td><p-tag [value]="ticket.estado" [severity]="getEstadoSeverity(ticket.estado)" /></td>
+                        <td>{{ ticket.asignadoA || 'Sin asignar' }}</td>
+                        <td><p-tag [value]="ticket.prioridad" [severity]="getPrioridadSeverity(ticket.prioridad)" /></td>
+                        <td>{{ ticket.creadoPor }}</td>
+                        <td>{{ ticket.fechaLimite ? (ticket.fechaLimite | date:'dd/MM/yyyy') : '—' }}</td>
+                        <td>
+                            <div class="action-buttons">
+                                @if (canFullEditTicket(ticket)) {
+                                <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info"
+                                    pTooltip="Editar" (onClick)="editTicket(ticket)" />
+                                } @else if (canStatusEditTicket(ticket)) {
+                                <p-button icon="pi pi-sync" [rounded]="true" [text]="true" severity="info"
+                                    pTooltip="Cambiar estado" (onClick)="editTicketStatus(ticket)" />
+                                }
+                                @if (ps.hasAnyPermission('ticket:delete')) {
+                                <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger"
+                                    pTooltip="Eliminar" (onClick)="deleteTicket(ticket)" />
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                </ng-template>
+                <ng-template #emptymessage>
+                    <tr>
+                        <td colspan="8">
+                            <div class="empty-message">
+                                <i class="pi pi-inbox"></i>
+                                <span>No hay tickets que coincidan con el filtro</span>
+                            </div>
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+            }
+        </div>
+        }
+        }
+
+        <!-- ===== Add/Edit Group Dialog (admin) ===== -->
+        <p-dialog [(visible)]="showDialog" [header]="editMode ? 'Editar Grupo' : 'Nuevo Grupo'" [modal]="true"
+            [draggable]="false" [resizable]="false" styleClass="group-dialog" [style]="{ width: '520px' }">
+            <div class="dialog-form">
+                <div class="form-row">
+                    <label for="nombre">Nombre</label>
+                    <input id="nombre" pInputText [(ngModel)]="selectedGroup.nombre" placeholder="Nombre del grupo"
                         class="form-input" />
                 </div>
-            </div>
-
-            <div class="form-row-two">
-                <div class="form-col">
-                    <label for="integrantes">Integrantes</label>
-                    <p-inputNumber id="integrantes" [(ngModel)]="selectedGroup.integrantes" [min]="0"
-                        [showButtons]="true" styleClass="form-input" />
+                <div class="form-row-two">
+                    <div class="form-col">
+                        <label for="nivel">Nivel</label>
+                        <p-select id="nivel" [options]="nivelesOptions" [(ngModel)]="selectedGroup.nivel"
+                            placeholder="Seleccionar nivel" styleClass="form-input" />
+                    </div>
+                    <div class="form-col">
+                        <label for="autoridad">Autoridad</label>
+                        <input id="autoridad" pInputText [(ngModel)]="selectedGroup.autoridad" placeholder="Autoridad"
+                            class="form-input" />
+                    </div>
                 </div>
-                <div class="form-col">
-                    <label for="tickets">Tickets</label>
-                    <p-inputNumber id="tickets" [(ngModel)]="selectedGroup.tickets" [min]="0" [showButtons]="true"
-                        styleClass="form-input" />
+                <div class="form-row-two">
+                    <div class="form-col">
+                        <label for="integrantes">Integrantes</label>
+                        <p-inputNumber id="integrantes" [(ngModel)]="selectedGroup.integrantes" [min]="0"
+                            [showButtons]="true" styleClass="form-input" />
+                    </div>
+                    <div class="form-col">
+                        <label for="tickets">Tickets</label>
+                        <p-inputNumber id="tickets" [(ngModel)]="selectedGroup.tickets" [min]="0" [showButtons]="true"
+                            styleClass="form-input" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <label for="descripcion">Descripción</label>
+                    <textarea id="descripcion" pTextarea [(ngModel)]="selectedGroup.descripcion"
+                        placeholder="Descripción del grupo" [rows]="3" class="form-input"></textarea>
                 </div>
             </div>
+            <ng-template #footer>
+                <div class="dialog-footer">
+                    <p-button label="Cancelar" icon="pi pi-times" severity="secondary" [text]="true"
+                        (onClick)="showDialog = false" />
+                    <p-button [label]="editMode ? 'Actualizar' : 'Guardar'"
+                        [icon]="editMode ? 'pi pi-check' : 'pi pi-save'" severity="primary" (onClick)="saveGroup()" />
+                </div>
+            </ng-template>
+        </p-dialog>
 
-            <div class="form-row">
-                <label for="descripcion">Descripción</label>
-                <textarea id="descripcion" pTextarea [(ngModel)]="selectedGroup.descripcion"
-                    placeholder="Descripción del grupo" [rows]="3" class="form-input"></textarea>
+        <!-- ===== Create/Edit Ticket Dialog ===== -->
+        <p-dialog [(visible)]="showTicketDialog" [header]="ticketEditMode ? 'Editar Ticket' : 'Crear Ticket'"
+            [modal]="true" [draggable]="false" [resizable]="false" styleClass="group-dialog"
+            [style]="{ width: '620px' }">
+            <div class="dialog-form">
+                <!-- Grupo asignado (solo lectura) -->
+                <div class="form-row">
+                    <label>Grupo</label>
+                    <span class="ticket-readonly-value">
+                        <i class="pi pi-users" style="margin-right: 0.4rem; font-size: 0.85rem;"></i>
+                        {{ getGroupName(selectedTicket.grupoId) }}
+                    </span>
+                </div>
+
+                <div class="form-row">
+                    <label for="t-titulo">Título</label>
+                    <input id="t-titulo" pInputText [(ngModel)]="selectedTicket.titulo" placeholder="Título del ticket"
+                        class="form-input" />
+                </div>
+
+                <div class="form-row">
+                    <label for="t-descripcion">Descripción</label>
+                    <textarea id="t-descripcion" pTextarea [(ngModel)]="selectedTicket.descripcion"
+                        placeholder="Descripción detallada del ticket" [rows]="3" class="form-input"></textarea>
+                </div>
+
+                <div class="form-row-two">
+                    <div class="form-col">
+                        <label for="t-estado">Estado Actual</label>
+                        <p-select id="t-estado" [options]="estadoOptions" [(ngModel)]="selectedTicket.estado"
+                            placeholder="Seleccionar estado" styleClass="form-input" />
+                    </div>
+                    <div class="form-col">
+                        <label for="t-prioridad">Prioridad</label>
+                        <p-select id="t-prioridad" [options]="prioridadOptions" [(ngModel)]="selectedTicket.prioridad"
+                            placeholder="Seleccionar prioridad" styleClass="form-input" />
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <label for="t-asignado">Asignado a</label>
+                    <input id="t-asignado" pInputText [(ngModel)]="selectedTicket.asignadoA"
+                        placeholder="Nombre de la persona asignada" class="form-input" />
+                </div>
+
+                <div class="form-row-two">
+                    <div class="form-col">
+                        <label for="t-fecha-creacion">Fecha de Creación</label>
+                        <p-datepicker id="t-fecha-creacion" [(ngModel)]="selectedTicket.fechaCreacion"
+                            dateFormat="dd/mm/yy" [showIcon]="true" [disabled]="true" styleClass="w-full"
+                            inputStyleClass="w-full" />
+                    </div>
+                    <div class="form-col">
+                        <label for="t-fecha-limite">Fecha Límite</label>
+                        <p-datepicker id="t-fecha-limite" [(ngModel)]="selectedTicket.fechaLimite" dateFormat="dd/mm/yy"
+                            placeholder="dd/mm/aaaa" [showIcon]="true" styleClass="w-full" inputStyleClass="w-full" />
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <label for="t-comentarios">Comentarios</label>
+                    <textarea id="t-comentarios" pTextarea [(ngModel)]="selectedTicket.comentarios"
+                        placeholder="Comentarios adicionales" [rows]="2" class="form-input"></textarea>
+                </div>
+
+                <!-- Historial de Cambios (solo lectura en edición) -->
+                @if (ticketEditMode && selectedTicket.historialCambios.length > 0) {
+                <div class="form-row">
+                    <label>Historial de Cambios</label>
+                    <div class="historial-list">
+                        @for (cambio of selectedTicket.historialCambios; track cambio) {
+                        <div class="historial-item">
+                            <i class="pi pi-clock"></i>
+                            <span>{{ cambio }}</span>
+                        </div>
+                        }
+                    </div>
+                </div>
+                }
             </div>
-        </div>
 
-        <ng-template #footer>
-            <div class="dialog-footer">
-                <p-button label="Cancelar" icon="pi pi-times" severity="secondary" [text]="true"
-                    (onClick)="showDialog = false" />
-                <p-button [label]="editMode ? 'Actualizar' : 'Guardar'" [icon]="editMode ? 'pi pi-check' : 'pi pi-save'"
-                    severity="primary" (onClick)="saveGroup()" />
+            <ng-template #footer>
+                <div class="dialog-footer">
+                    <p-button label="Cancelar" icon="pi pi-times" severity="secondary" [text]="true"
+                        (onClick)="showTicketDialog = false" />
+                    <p-button [label]="ticketEditMode ? 'Actualizar Ticket' : 'Crear Ticket'"
+                        [icon]="ticketEditMode ? 'pi pi-check' : 'pi pi-save'" severity="primary"
+                        (onClick)="saveTicket()" />
+                </div>
+            </ng-template>
+        </p-dialog>
+
+        <p-dialog [(visible)]="showTicketStatusDialog" header="Cambiar Estado del Ticket" [modal]="true"
+            [draggable]="false" [resizable]="false" styleClass="group-dialog" [style]="{ width: '420px' }">
+            <div class="dialog-form">
+                <div class="form-row">
+                    <label>Ticket</label>
+                    <span class="ticket-readonly-value">{{ selectedTicket.titulo }}</span>
+                </div>
+
+                <div class="form-row">
+                    <label for="t-estado-status">Estado Actual</label>
+                    <p-select id="t-estado-status" [options]="estadoOptions" [(ngModel)]="selectedTicket.estado"
+                        placeholder="Seleccionar estado" styleClass="w-full" />
+                </div>
+
+                <div class="form-row">
+                    <label for="t-comentarios-status">Comentarios</label>
+                    <textarea id="t-comentarios-status" pTextarea [(ngModel)]="selectedTicket.comentarios"
+                        placeholder="Agregar un comentario" [rows]="2" class="form-input"></textarea>
+                </div>
+
+                <!-- Historial de Cambios (solo lectura) -->
+                @if (selectedTicket.historialCambios.length > 0) {
+                <div class="form-row">
+                    <label>Historial de Cambios</label>
+                    <div class="historial-list">
+                        @for (cambio of selectedTicket.historialCambios; track cambio) {
+                        <div class="historial-item">
+                            <i class="pi pi-clock"></i>
+                            <span>{{ cambio }}</span>
+                        </div>
+                        }
+                    </div>
+                </div>
+                }
             </div>
-        </ng-template>
-    </p-dialog>
 
-    <!-- Confirm Dialog -->
-    <p-confirmDialog />
+            <ng-template #footer>
+                <div class="dialog-footer">
+                    <p-button label="Cancelar" icon="pi pi-times" severity="secondary" [text]="true"
+                        (onClick)="showTicketStatusDialog = false" />
+                    <p-button label="Guardar Estado" icon="pi pi-check" severity="primary"
+                        (onClick)="saveTicketStatus()" />
+                </div>
+            </ng-template>
+        </p-dialog>
+
+        <!-- ===== Agregar Usuario al Grupo — Modal ===== -->
+        <p-dialog [(visible)]="showAddMemberDialog" header="Agregar Usuario al Grupo" [modal]="true"
+            [draggable]="false" [resizable]="false" styleClass="group-dialog" [style]="{ width: '480px' }">
+            <div class="dialog-form">
+                <div class="form-row">
+                    <label>Grupo</label>
+                    <span class="ticket-readonly-value">
+                        <i class="pi pi-users" style="margin-right: 0.4rem; font-size: 0.85rem;"></i>
+                        {{ getGroupName(addMemberGroupId) }}
+                    </span>
+                </div>
+                <div class="form-row">
+                    <label for="m-nombre">Nombre de Usuario</label>
+                    <input id="m-nombre" pInputText [(ngModel)]="newMemberNombre"
+                        placeholder="Ej: Juan Pérez" class="form-input" />
+                </div>
+                <div class="form-row">
+                    <label for="m-email">Email</label>
+                    <input id="m-email" pInputText [(ngModel)]="newMemberEmail"
+                        placeholder="Ej: juan@empresa.com" class="form-input" />
+                </div>
+
+                <!-- Miembros actuales del grupo -->
+                @if (getMembersByGroup(addMemberGroupId).length > 0) {
+                <div class="form-row">
+                    <label>Miembros Actuales</label>
+                    <div class="current-members-list">
+                        @for (m of getMembersByGroup(addMemberGroupId); track m.id) {
+                        <div class="current-member-item">
+                            <i class="pi pi-user"></i>
+                            <span>{{ m.nombre }}</span>
+                            <span class="current-member-email">{{ m.email }}</span>
+                        </div>
+                        }
+                    </div>
+                </div>
+                }
+            </div>
+            <ng-template #footer>
+                <div class="dialog-footer">
+                    <p-button label="Cancelar" icon="pi pi-times" severity="secondary" [text]="true"
+                        (onClick)="showAddMemberDialog = false" />
+                    <p-button label="Agregar Usuario" icon="pi pi-user-plus" severity="success"
+                        (onClick)="addMember()" />
+                </div>
+            </ng-template>
+        </p-dialog>
+
+        <!-- Confirm Dialog -->
+        <p-confirmDialog />
+    </div>
+</ng-container>
+
+<!-- Sin permiso: mensaje de acceso denegado -->
+@if (!ps.hasAnyPermission('group:view', 'group:view')) {
+<div class="no-permission-message">
+    <i class="pi pi-lock"></i>
+    <h3>Acceso Denegado</h3>
+    <p>No tienes permisos para ver los grupos.</p>
 </div>
+}
