@@ -10,7 +10,6 @@ import { Toolbar } from 'primeng/toolbar';
 import { ConfirmDialog } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { Tooltip } from 'primeng/tooltip';
-import { Checkbox } from 'primeng/checkbox';
 import { Password } from 'primeng/password';
 import { DatePicker } from 'primeng/datepicker';
 import { HasPermissionDirective } from '../../directives/has-permission.directive';
@@ -46,7 +45,6 @@ interface AdminUser {
     Toolbar,
     ConfirmDialog,
     Tooltip,
-    Checkbox,
     Password,
     DatePicker,
     HasPermissionDirective,

@@ -134,10 +134,10 @@ export class Tickets implements OnInit {
     
     // Admin sees all in group, User sees only assigned to them
     if (this.permissionService.hasPermission('EDIT_TICKETS_ALL')) {
-      this.tickets = this.allTickets.filter(t => t.groupId === user.groupId);
+      this.tickets = this.allTickets.filter(t => t.groupId === user.grupoId?.toString());
     } else if (this.permissionService.hasPermission('VIEW_OWN_TICKETS')) {
-      this.tickets = this.allTickets.filter(t => 
-        t.asignadoA === user.usuario || 
+      this.tickets = this.allTickets.filter(t =>
+        t.asignadoA === user.username ||
         (user.email === 'user@seguridad.com' && t.asignadoA === 'normal_user')
       );
     }
@@ -147,8 +147,8 @@ export class Tickets implements OnInit {
     const user = this.authService?.getUser();
     return {
       id: '',
-      groupId: user?.groupId || '',
-      creadorId: user?.usuario || '',
+      groupId: user?.grupoId?.toString() || '',
+      creadorId: user?.username || '',
       titulo: '',
       descripcion: '',
       estado: 'Pendiente',
@@ -179,8 +179,8 @@ export class Tickets implements OnInit {
     this.newComment = '';
     
     const user = this.authService.getUser();
-    this.isCreator = this.selectedTicket.creadorId === user?.usuario;
-    this.isAssignee = this.selectedTicket.asignadoA === user?.usuario;
+    this.isCreator = this.selectedTicket.creadorId === user?.username;
+    this.isAssignee = this.selectedTicket.asignadoA === user?.username;
     
     this.showUserDialog = true;
   }
@@ -201,12 +201,12 @@ export class Tickets implements OnInit {
       if (this.editMode) {
         const idx = this.allTickets.findIndex(x => x.id === this.selectedTicket.id);
         if (idx !== -1) {
-            this.selectedTicket.historialCambios.push({ id: Math.random().toString(), userId: user?.usuario || '', action: 'Ticket actualizado por Admin', timestamp });
+            this.selectedTicket.historialCambios.push({ id: Math.random().toString(), userId: user?.username || '', action: 'Ticket actualizado por Admin', timestamp });
             this.allTickets[idx] = { ...this.selectedTicket };
         }
       } else {
         this.selectedTicket.id = 'TKT-' + (Math.floor(Math.random() * 900) + 100);
-        this.selectedTicket.historialCambios.push({ id: Math.random().toString(), userId: user?.usuario || '', action: 'Ticket creado', timestamp });
+        this.selectedTicket.historialCambios.push({ id: Math.random().toString(), userId: user?.username || '', action: 'Ticket creado', timestamp });
         this.allTickets.push({ ...this.selectedTicket });
       }
       this.showDialog = false;
@@ -215,14 +215,14 @@ export class Tickets implements OnInit {
       if (idx !== -1) {
           const oldStatus = this.allTickets[idx].estado;
           if (oldStatus !== this.selectedTicket.estado) {
-            this.selectedTicket.historialCambios.push({ id: Math.random().toString(), userId: user?.usuario || '', action: `Cambió estado de ${oldStatus} a ${this.selectedTicket.estado}`, timestamp });
+            this.selectedTicket.historialCambios.push({ id: Math.random().toString(), userId: user?.username || '', action: `Cambió estado de ${oldStatus} a ${this.selectedTicket.estado}`, timestamp });
           }
           if (this.newComment.trim()) {
-            this.selectedTicket.comentarios.push({ id: Math.random().toString(), userId: user?.usuario || '', text: this.newComment.trim(), createdAt: timestamp });
+            this.selectedTicket.comentarios.push({ id: Math.random().toString(), userId: user?.username || '', text: this.newComment.trim(), createdAt: timestamp });
           }
           
           if (this.isCreator && !this.isAssignee) {
-             this.selectedTicket.historialCambios.push({ id: Math.random().toString(), userId: user?.usuario || '', action: 'Ticket actualizado por su Creador', timestamp });
+             this.selectedTicket.historialCambios.push({ id: Math.random().toString(), userId: user?.username || '', action: 'Ticket actualizado por su Creador', timestamp });
           }
 
           this.allTickets[idx] = { ...this.selectedTicket };
@@ -236,7 +236,7 @@ export class Tickets implements OnInit {
     const user = this.authService.getUser();
     let filtered = this.tickets;
     if (this.activeFilter === 'mine') {
-      filtered = filtered.filter(t => t.asignadoA === user?.usuario || (user?.email === 'user@seguridad.com' && t.asignadoA === 'normal_user'));
+      filtered = filtered.filter(t => t.asignadoA === user?.username || (user?.email === 'user@seguridad.com' && t.asignadoA === 'normal_user'));
     } else if (this.activeFilter === 'unassigned') {
       filtered = filtered.filter(t => !t.asignadoA || t.asignadoA.trim() === '');
     } else if (this.activeFilter === 'high-priority') {
@@ -292,7 +292,7 @@ export class Tickets implements OnInit {
       this.allTickets[idx].estado = newStatus;
       this.allTickets[idx].historialCambios.push({
           id: Math.random().toString(),
-          userId: this.authService.getUser()?.usuario || '',
+          userId: this.authService.getUser()?.username || '',
           action: `Movió ticket de ${oldStatus} a ${newStatus} (Drag&Drop)`,
           timestamp: new Date().toLocaleString()
       });

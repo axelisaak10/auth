@@ -1,6 +1,7 @@
 import { Component, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { Card } from 'primeng/card';
 import { Tag } from 'primeng/tag';
 import { Divider } from 'primeng/divider';
@@ -12,7 +13,6 @@ import { DatePicker } from 'primeng/datepicker';
 import { Password } from 'primeng/password';
 import { ConfirmDialog } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
-<<<<<<< HEAD
 import { TableModule } from 'primeng/table';
 import { Toolbar } from 'primeng/toolbar';
 import { Select } from 'primeng/select';
@@ -22,14 +22,6 @@ import { HasPermissionDirective } from '../../directives/has-permission.directiv
 import { PermissionService } from '../../services/permission.service';
 import { TicketItem } from '../group/group';
 import { MessageService } from 'primeng/api';
-=======
-import { AuthService } from '../../services/auth.service';
-import { PermissionService } from '../../services/permission.service';
-import { UserSession } from '../../models/types';
-import { HasPermissionDirective } from '../../directiva/directiva';
-import { TableModule } from 'primeng/table';
-import { ToolbarModule } from 'primeng/toolbar';
->>>>>>> 9da5e22e8d381878948c234f5992eb16a820adfb
 
 @Component({
   selector: 'app-user',
@@ -46,17 +38,11 @@ import { ToolbarModule } from 'primeng/toolbar';
     DatePicker,
     Password,
     ConfirmDialog,
-<<<<<<< HEAD
     TableModule,
     Toolbar,
     Select,
     Tooltip,
     HasPermissionDirective,
-=======
-    HasPermissionDirective,
-    TableModule,
-    ToolbarModule
->>>>>>> 9da5e22e8d381878948c234f5992eb16a820adfb
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './user.html',
@@ -90,11 +76,11 @@ export class User {
 
   constructor(
     private authService: AuthService,
-    private permissionService: PermissionService,
     private confirmationService: ConfirmationService,
     public ps: PermissionService,
     private messageService: MessageService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private http: HttpClient
   ) {
     this.user = this.authService.getUser();
     this.loadUserTickets();
@@ -129,7 +115,6 @@ export class User {
     return {
       id: '',
       email: '',
-<<<<<<< HEAD
       nombreCompleto: '',
       username: '',
       telefono: '',
@@ -139,14 +124,6 @@ export class User {
       last_login: '',
       permisos_globales: [],
       grupoId: 0,
-=======
-      nombre: '',
-      usuario: '',
-      telefono: '',
-      direccion: '',
-      fechaNacimiento: '',
-      permissions: []
->>>>>>> 9da5e22e8d381878948c234f5992eb16a820adfb
     };
   }
 
@@ -163,47 +140,21 @@ export class User {
       fechaLimite: null,
       comentarios: '',
       historialCambios: [],
-      grupoId: 0,
+      grupoId: '',
     };
   }
 
-  /** Carga los tickets que pertenecen al grupo del usuario */
   private loadUserTickets(): void {
     if (!this.user?.grupoId) return;
-    // Mock tickets del grupo del usuario
-    this.userTickets = [
-      {
-        id: 1,
-        titulo: 'Auditoría de accesos',
-        descripcion: 'Revisar los logs de acceso del último mes.',
-        estado: 'Pendiente',
-        asignadoA: 'María López',
-        creadoPor: 'Carlos Administrador',
-        prioridad: 'Alta',
-        fechaCreacion: new Date('2026-03-01'),
-        fechaLimite: new Date('2026-03-15'),
-        comentarios: '',
-        historialCambios: ['Creado el 01/03/2026'],
-        grupoId: 1,
-      },
-      {
-        id: 2,
-        titulo: 'Actualizar firewall',
-        descripcion: 'Configurar nuevas reglas de firewall para el servidor principal.',
-        estado: 'En progreso',
-        asignadoA: 'Carlos Administrador',
-        creadoPor: 'María López',
-        prioridad: 'Urgente',
-        fechaCreacion: new Date('2026-02-28'),
-        fechaLimite: new Date('2026-03-10'),
-        comentarios: 'Coordinando con el proveedor.',
-        historialCambios: ['Creado el 28/02/2026', 'Asignado a Carlos 01/03/2026'],
-        grupoId: 1,
-      },
-    ].filter(t => t.grupoId === this.user!.grupoId);
+    this.http.get<TicketItem[]>(
+      `http://localhost:3444/tickets?grupoId=${this.user.grupoId}`,
+      { withCredentials: true }
+    ).subscribe({
+      next: (tickets) => { this.userTickets = tickets; },
+      error: (err) => console.error('Error loading user tickets', err)
+    });
   }
 
-  // ====== Ticket Status Edit ======
   editTicketStatus(ticket: TicketItem): void {
     this.selectedTicket = { ...ticket, historialCambios: [...ticket.historialCambios] };
     this.showTicketStatusDialog = true;
@@ -220,7 +171,6 @@ export class User {
     this.showTicketStatusDialog = false;
   }
 
-  // ====== Helpers ======
   getEstadoSeverity(estado: string): 'success' | 'warn' | 'danger' | 'info' | 'secondary' {
     switch (estado) {
       case 'Finalizado': return 'success';
@@ -274,9 +224,7 @@ export class User {
     }
 
     this.isSavingProfile = true;
-    
-    // Crear el payload a enviar al backend
-    // Según requerimiento de la nota de seguridad: solo mandar los campos a actalizar.
+
     const payload: any = {};
     if (this.editData.nombreCompleto) payload.nombreCompleto = this.editData.nombreCompleto;
     if (this.editData.username) payload.username = this.editData.username;
@@ -290,21 +238,14 @@ export class User {
     }
 
     this.authService.updateProfile(payload).subscribe({
-      next: (res) => {
+      next: () => {
         this.isSavingProfile = false;
         this.showEditDialog = false;
-
-        // Actualizar sesión local con los nuevos datos
         this.user = { ...this.user!, ...payload };
-        
-        // Limpiamos password del local storage por seguridad
         const safeSession = { ...this.user };
         delete (safeSession as any).password;
         localStorage.setItem('session', JSON.stringify(safeSession));
-        
         this.messageService.add({ severity: 'success', summary: 'Perfil Actualizado', detail: 'Tus datos se han guardado correctamente' });
-        
-        // Forzar sincronización de DOM de Angular (elimina el NG0100)
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -316,8 +257,7 @@ export class User {
   }
 
   soloNumeros(event: KeyboardEvent): void {
-    const charCode = event.key;
-    if (!/^\d$/.test(charCode)) {
+    if (!/^\d$/.test(event.key)) {
       event.preventDefault();
     }
   }
@@ -346,5 +286,4 @@ export class User {
   reactivateAccount(): void {
     this.accountSuspended = false;
   }
-
 }

@@ -83,7 +83,7 @@ export class DashboardGroup implements OnInit {
     ];
 
     // Filter by group
-    const myTickets = allTickets.filter(t => t.groupId === user.groupId);
+    const myTickets = allTickets.filter(t => t.groupId === user.grupoId?.toString());
     
     this.total = myTickets.length;
     this.pendientes = myTickets.filter(t => t.estado === 'Pendiente').length;

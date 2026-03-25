@@ -208,32 +208,44 @@
     color: #8b8fa8;
 }
 
-/* ===== Dialog Form ===== */
+/* ===== Dialog Form — Dark Theme ===== */
 :host ::ng-deep .group-dialog .p-dialog {
     border-radius: 20px;
-    box-shadow: 0 24px 64px rgba(139, 92, 246, 0.18);
-    border: 1px solid #e9e5f5;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(139, 92, 246, 0.25);
+    background: #1a1625 !important;
+    overflow: hidden;
 }
 
 :host ::ng-deep .group-dialog .p-dialog-header {
-    border-bottom: 1px solid #f1eef9;
+    border-bottom: 1px solid rgba(139, 92, 246, 0.2);
     padding: 1.25rem 1.5rem;
-    background: linear-gradient(135deg, #fafaff, #f5f3ff);
+    background: #221d33 !important;
 }
 
 :host ::ng-deep .group-dialog .p-dialog-title {
     font-weight: 800;
-    color: #6d28d9;
+    color: #c4b5fd;
     font-size: 1.15rem;
+}
+
+:host ::ng-deep .group-dialog .p-dialog-header-close {
+    color: #a78bfa !important;
+}
+:host ::ng-deep .group-dialog .p-dialog-header-close:hover {
+    background: rgba(167, 139, 250, 0.15) !important;
+    color: #c4b5fd !important;
 }
 
 :host ::ng-deep .group-dialog .p-dialog-content {
     padding: 1.5rem;
+    background: #1a1625 !important;
+    color: #e2deff;
 }
 
 :host ::ng-deep .group-dialog .p-dialog-footer {
-    border-top: 1px solid #f1eef9;
-    background: #fafaff;
+    border-top: 1px solid rgba(139, 92, 246, 0.2);
+    background: #221d33 !important;
     padding: 1rem 1.5rem;
 }
 
@@ -264,7 +276,7 @@
 .dialog-form label {
     font-size: 0.78rem;
     font-weight: 700;
-    color: #8b8fa8;
+    color: #a78bfa;
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
@@ -273,19 +285,45 @@
     width: 100%;
 }
 
-:host ::ng-deep .dialog-form .p-inputtext,
-:host ::ng-deep .dialog-form .p-textarea,
-:host ::ng-deep .dialog-form .p-select {
+:host ::ng-deep .group-dialog .p-inputtext,
+:host ::ng-deep .group-dialog .p-textarea,
+:host ::ng-deep .group-dialog .p-select {
+    background: #2d2540 !important;
+    border-color: rgba(139, 92, 246, 0.3) !important;
+    color: #e2deff !important;
     border-radius: 10px;
-    border-color: #e0d4fc;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-:host ::ng-deep .dialog-form .p-inputtext:focus,
-:host ::ng-deep .dialog-form .p-textarea:focus,
-:host ::ng-deep .dialog-form .p-select.p-focus {
-    border-color: #a78bfa;
-    box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.2);
+:host ::ng-deep .group-dialog .p-inputtext::placeholder,
+:host ::ng-deep .group-dialog .p-textarea::placeholder {
+    color: #6b6282 !important;
+}
+
+:host ::ng-deep .group-dialog .p-inputtext:focus,
+:host ::ng-deep .group-dialog .p-textarea:focus,
+:host ::ng-deep .group-dialog .p-select.p-focus {
+    border-color: #a78bfa !important;
+    box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.2) !important;
+}
+
+:host ::ng-deep .group-dialog .p-select-label {
+    color: #e2deff !important;
+}
+
+:host ::ng-deep .group-dialog .p-select-overlay {
+    background: #221d33 !important;
+    border: 1px solid rgba(139, 92, 246, 0.25) !important;
+    border-radius: 12px !important;
+}
+
+:host ::ng-deep .group-dialog .p-select-option {
+    color: #e2deff !important;
+}
+
+:host ::ng-deep .group-dialog .p-select-option:hover,
+:host ::ng-deep .group-dialog .p-select-option.p-focus {
+    background: rgba(139, 92, 246, 0.15) !important;
 }
 
 .dialog-footer {
@@ -293,6 +331,7 @@
     justify-content: flex-end;
     gap: 0.5rem;
 }
+
 
 /* ===== Responsive — Tablets landscape ===== */
 @media (max-width: 1024px) {
@@ -442,7 +481,6 @@
     }
 }
 
-<<<<<<< HEAD
 /* ===== Tickets Section ===== */
 .tickets-section {
     display: flex;
@@ -1036,39 +1074,3 @@
     border-radius: 12px;
     transition: background 0.2s ease, border 0.2s ease;
 }
-=======
-/* ===== Black Theme Dialog Override ===== */
-:host ::ng-deep .black-theme-dialog.p-dialog {
-    background: #000000 !important;
-    border: 1px solid #333333 !important;
-    border-radius: 12px !important;
-    overflow: hidden;
-}
-
-:host ::ng-deep .black-theme-dialog .p-dialog-header {
-    background: #000000 !important;
-    color: #ffffff !important;
-    border-top-left-radius: 12px !important;
-    border-top-right-radius: 12px !important;
-}
-
-:host ::ng-deep .black-theme-dialog .p-dialog-content {
-    background: #000000 !important;
-    color: #ffffff !important;
-}
-
-:host ::ng-deep .black-theme-dialog .p-dialog-footer {
-    background: #000000 !important;
-    color: #ffffff !important;
-    border-bottom-left-radius: 12px !important;
-    border-bottom-right-radius: 12px !important;
-}
-
-:host ::ng-deep .black-theme-dialog .p-dialog-header-close {
-    color: #ffffff !important;
-}
-:host ::ng-deep .black-theme-dialog .p-dialog-header-close:hover {
-    background: #333333 !important;
-    color: #ffffff !important;
-}
->>>>>>> 9da5e22e8d381878948c234f5992eb16a820adfb

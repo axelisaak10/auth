@@ -17,7 +17,7 @@
         <ul class="nav-list">
             @for (item of menuItems; track item.label) {
             <li>
-                <a class="nav-item" [routerLink]="item.route" routerLinkActive="nav-active" [fragment]="item.fragment"
+                <a class="nav-item" [routerLink]="item.route" routerLinkActive="nav-active"
                     [routerLinkActiveOptions]="{ exact: true }" pRipple (click)="onOverlayClick()">
                     <i [class]="item.icon"></i>
                     <span>{{ item.label }}</span>

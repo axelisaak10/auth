@@ -133,20 +133,18 @@ export class Register {
         this.messageService.add({
           severity: 'success',
           summary: '¡Registro exitoso!',
-          detail: 'Tu cuenta ha sido creada correctamente.',
-          life: 4000,
+          detail: 'Tu cuenta ha sido creada. Redirigiendo al inicio de sesión...',
+          life: 2000,
         });
-        
-        setTimeout(() => {
-          this.router.navigate(['/auth/login']);
-        }, 1500);
+        this.registerForm.reset();
+        setTimeout(() => this.router.navigate(['/auth/login']), 2000);
       },
       error: (err: any) => {
         this.messageService.add({
           severity: 'error',
           summary: 'Error en el registro',
-          detail: 'No se pudo crear la cuenta. Intenta con otro correo o verifica tus datos.',
-          life: 4000,
+          detail: err?.error?.message || 'No se pudo crear la cuenta. Verifica tus datos.',
+          life: 5000,
         });
         console.error('Error al registrar:', err);
       }

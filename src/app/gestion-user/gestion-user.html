@@ -24,8 +24,8 @@
                 </ng-template>
                 <ng-template #body let-ba>
                     <tr>
-                        <td><p-tag severity="info" [value]="ba.usuario"></p-tag></td>
-                        <td>{{ ba.nombre }}</td>
+                        <td><p-tag severity="info" [value]="ba.username"></p-tag></td>
+                        <td>{{ ba.nombreCompleto }}</td>
                         <td>{{ ba.email }}</td>
                         <td>
                             <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info" (onClick)="editBasicAdmin(ba)" />
@@ -43,14 +43,14 @@
                     <label for="ba-usuario">Usuario</label>
                     <div style="position: relative; display: flex; align-items: center;">
                         <i class="pi pi-user" style="position: absolute; left: 1rem; color: #a5b4c8; z-index: 1;"></i>
-                        <input id="ba-usuario" pInputText [(ngModel)]="basicAdminData.usuario" class="w-full" style="padding-left: 2.5rem; border-radius: 8px; background: #111; color: #fff; border: 1px solid #333;" placeholder="Ej. usuario_admin" />
+                        <input id="ba-usuario" pInputText [(ngModel)]="basicAdminData.username" class="w-full" style="padding-left: 2.5rem; border-radius: 8px; background: #111; color: #fff; border: 1px solid #333;" placeholder="Ej. usuario_admin" />
                     </div>
                 </div>
                 <div class="edit-form-row">
                     <label for="ba-nombre">Nombre</label>
                     <div style="position: relative; display: flex; align-items: center;">
                         <i class="pi pi-id-card" style="position: absolute; left: 1rem; color: #a5b4c8; z-index: 1;"></i>
-                        <input id="ba-nombre" pInputText [(ngModel)]="basicAdminData.nombre" class="w-full" style="padding-left: 2.5rem; border-radius: 8px; background: #111; color: #fff; border: 1px solid #333;" placeholder="Nombre completo" />
+                        <input id="ba-nombre" pInputText [(ngModel)]="basicAdminData.nombreCompleto" class="w-full" style="padding-left: 2.5rem; border-radius: 8px; background: #111; color: #fff; border: 1px solid #333;" placeholder="Nombre completo" />
                     </div>
                 </div>
                 <div class="edit-form-row">
@@ -64,14 +64,7 @@
                     <label for="ba-group">Grupo Asignado (ID)</label>
                     <div style="position: relative; display: flex; align-items: center; width: 100%;">
                         <i class="pi pi-users" style="position: absolute; left: 1rem; color: #a5b4c8; z-index: 1;"></i>
-                        <p-select [options]="mockGroups" [(ngModel)]="basicAdminData.groupId" optionLabel="label" optionValue="value" placeholder="Seleccionar Grupo" styleClass="w-full" [style]="{'border-radius': '8px', 'background': '#111', 'border': '1px solid #333', 'width': '100%'}" class="select-with-padding" appendTo="body">
-                            <ng-template let-grp pTemplate="selectedItem">
-                                <div style="color: #fff;">{{ grp.label }}</div>
-                            </ng-template>
-                            <ng-template let-grp pTemplate="item">
-                                <div>{{ grp.label }}</div>
-                            </ng-template>
-                        </p-select>
+                        <input id="ba-group" pInputText [(ngModel)]="basicAdminData.grupoId" class="w-full" style="padding-left: 2.5rem; border-radius: 8px; background: #111; color: #fff; border: 1px solid #333;" placeholder="Ej. 1" />
                     </div>
                 </div>
             </div>
