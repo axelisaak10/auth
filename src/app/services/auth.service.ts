@@ -1,100 +1,201 @@
-import { Injectable, signal, computed } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { Injectable, signal, computed, inject } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, tap } from 'rxjs';
-import { Permission } from '../models/permission.model';
+import { Observable, tap, catchError, throwError } from 'rxjs';
 
 export interface UserSession {
-    id: string;
-    email: string;
-    username: string;
-    nombreCompleto: string;
-    direccion?: string;
-    telefono?: string;
-    fecha_inicio?: string;
-    fecha_nacimiento?: string;
-    last_login?: string;
-    permisos_globales?: Permission[];
-    grupoId?: number;
+  id: string;
+  email: string;
+  username?: string;
+  nombre_completo?: string;
+  nombreCompleto?: string;
+  direccion?: string;
+  telefono?: string;
+  fecha_inicio?: string;
+  fecha_nacimiento?: string;
+  last_login?: string;
+  permisos_globales?: string[];
+  grupoId?: number;
 }
 
-export const MICROSERVICES = {
-    users: 'https://back-end-users.vercel.app',
-    groups: 'URL_PENDIENTE_GRUPOS',
-    tickets: 'URL_PENDIENTE_TICKETS'
-};
+export const API_GATEWAY = 'http://localhost:3008/api';
 
 @Injectable({
-    providedIn: 'root',
+  providedIn: 'root',
 })
 export class AuthService {
+  private http = inject(HttpClient);
+  private router = inject(Router);
 
-    private apiAuth = `${MICROSERVICES.users}/auth/login`;
-    private apiRegister = `${MICROSERVICES.users}/auth/register`;
-    private apiUsers = `${MICROSERVICES.users}/users`;
-    private apiPermissions = `${MICROSERVICES.users}/permissions`;
+  private apiBase = API_GATEWAY;
+  private apiAuth = `${this.apiBase}/auth`;
+  private apiRegister = `${this.apiAuth}/register`;
+  private apiUsers = `${this.apiBase}/users`;
+  private apiPermissions = `${this.apiBase}/permissions`;
 
-    private _isLoggedIn = signal(this.checkStorage());
+  private _isLoggedIn = signal(this.checkStorage());
 
-    isLoggedIn = computed(() => this._isLoggedIn());
+  isLoggedIn = computed(() => this._isLoggedIn());
 
-    constructor(private router: Router, private http: HttpClient) { }
+  getToken(): string | null {
+    return this.getTokenFromCookie();
+  }
 
-    login(credentials: any): Observable<any> {
-        return this.http.post(this.apiAuth, credentials, { withCredentials: true })
-            .pipe(
-                tap((response: any) => {
-                    const rawData = response.data || response;
-                    const userData = rawData.user ? rawData.user : rawData;
-                    if (userData.nombre_completo && !userData.nombreCompleto) {
-                        userData.nombreCompleto = userData.nombre_completo;
-                    }
-                    localStorage.setItem('session', JSON.stringify(userData));
-                    this._isLoggedIn.set(true);
-                })
-            );
+  private getTokenFromCookie(): string | null {
+    const cookies = document.cookie.split(';');
+    for (const cookie of cookies) {
+      const [name, value] = cookie.trim().split('=');
+      if (name === 'Authentication') {
+        return decodeURIComponent(value);
+      }
     }
+    return null;
+  }
 
-    registerPublic(userData: any): Observable<any> {
-        return this.http.post(this.apiRegister, userData, { withCredentials: true });
+  private extractUserData(response: any): UserSession {
+    if (response && response.data && Array.isArray(response.data) && response.data.length > 0) {
+      return response.data[0];
     }
+    if (response && response.data && !Array.isArray(response.data)) {
+      return response.data;
+    }
+    if (response && response.id && response.email) {
+      return response;
+    }
+    return response;
+  }
 
-    createUserByAdmin(userData: any): Observable<any> {
-        return this.http.post(this.apiUsers, userData, { withCredentials: true });
-    }
+  private saveSession(userData: UserSession): void {
+    const sessionData = {
+      id: userData.id,
+      email: userData.email || '',
+      username: userData.username || '',
+      nombre_completo: userData.nombre_completo || '',
+      nombreCompleto: userData.nombreCompleto || userData.nombre_completo || '',
+      direccion: userData.direccion || '',
+      telefono: userData.telefono || '',
+      fecha_inicio: userData.fecha_inicio || '',
+      fecha_nacimiento: userData.fecha_nacimiento || '',
+      last_login: userData.last_login || '',
+      permisos_globales: userData.permisos_globales || [],
+    };
+    localStorage.setItem('session', JSON.stringify(sessionData));
+    this._isLoggedIn.set(true);
+  }
 
-    getAllPermissions(): Observable<string[]> {
-        return this.http.get<string[]>(this.apiPermissions, { withCredentials: true });
-    }
+  login(credentials: { email: string; password: string }): Observable<any> {
+    return this.http.post(this.apiAuth + '/login', credentials, { withCredentials: true }).pipe(
+      tap((response: any) => {
+        const userData = this.extractUserData(response);
+        this.saveSession(userData);
+      }),
+    );
+  }
 
-    updateProfile(profileData: any): Observable<any> {
-        return this.http.patch(`${this.apiUsers}/profile`, profileData, { withCredentials: true });
-    }
+  register(userData: any): Observable<any> {
+    return this.http.post(this.apiRegister, userData);
+  }
 
-    getAllUsers(): Observable<any[]> {
-        return this.http.get<any[]>(this.apiUsers, { withCredentials: true });
-    }
+  refreshToken(): Observable<any> {
+    return this.http.post(this.apiAuth + '/refresh', {}, { withCredentials: true }).pipe(
+      tap((response: any) => {
+        const userData = this.extractUserData(response);
+        const currentUser = this.getUser();
+        const updatedUser = {
+          ...currentUser,
+          id: userData.id,
+          nombre_completo: userData.nombre_completo || currentUser?.nombre_completo,
+          permisos_globales: userData.permisos_globales || currentUser?.permisos_globales,
+        };
+        localStorage.setItem('session', JSON.stringify(updatedUser));
+      }),
+      catchError((error) => {
+        this.logout();
+        return throwError(() => error);
+      }),
+    );
+  }
 
-    deleteUser(userId: string): Observable<any> {
-        return this.http.delete(`${this.apiUsers}/${userId}`, { withCredentials: true });
-    }
+  revokeToken(): Observable<any> {
+    return this.http.post(this.apiAuth + '/revoke', {});
+  }
 
-    updateUserByAdmin(userId: string, data: any): Observable<any> {
-        return this.http.patch(`${this.apiUsers}/${userId}`, data, { withCredentials: true });
-    }
+  logout(): void {
+    this.http.post(this.apiAuth + '/logout', {}).subscribe({
+      next: () => this.clearSession(),
+      error: () => this.clearSession(),
+    });
+  }
 
-    logout(): void {
-        localStorage.removeItem('session');
-        this._isLoggedIn.set(false);
-        this.router.navigate(['/login']);
-    }
+  private clearSession(): void {
+    localStorage.removeItem('session');
+    this._isLoggedIn.set(false);
+    this.router.navigate(['/login']);
+  }
 
-    getUser(): UserSession | null {
-        const data = localStorage.getItem('session');
-        return data ? JSON.parse(data) : null;
-    }
+  registerPublic(userData: any): Observable<any> {
+    return this.http.post(this.apiRegister, userData);
+  }
 
-    private checkStorage(): boolean {
-        return !!localStorage.getItem('session');
+  createUserByAdmin(userData: any): Observable<any> {
+    return this.http.post(this.apiUsers, userData);
+  }
+
+  getAllPermissions(): Observable<string[]> {
+    return this.http.get<string[]>(this.apiPermissions);
+  }
+
+  updateProfile(profileData: any): Observable<any> {
+    return this.http.patch(this.apiAuth + '/profile', profileData).pipe(
+      tap((response: any) => {
+        const userData = this.extractUserData(response);
+        if (userData) {
+          const currentUser = this.getUser();
+          const updatedUser = { ...currentUser, ...userData };
+          localStorage.setItem('session', JSON.stringify(updatedUser));
+        }
+      }),
+    );
+  }
+
+  getAllUsers(): Observable<any[]> {
+    return this.http.get<any[]>(this.apiUsers);
+  }
+
+  deleteUser(userId: string): Observable<any> {
+    return this.http.delete(`${this.apiUsers}/${userId}`);
+  }
+
+  updateUserByAdmin(userId: string, data: any): Observable<any> {
+    return this.http.patch(`${this.apiUsers}/${userId}`, data);
+  }
+
+  getUser(): UserSession | null {
+    const data = localStorage.getItem('session');
+    return data ? JSON.parse(data) : null;
+  }
+
+  private checkStorage(): boolean {
+    const data = localStorage.getItem('session');
+    if (!data) return false;
+    try {
+      const parsed = JSON.parse(data);
+      return !!(parsed.id && parsed.permisos_globales);
+    } catch {
+      return false;
     }
+  }
+
+  hasPermission(permission: string): boolean {
+    const user = this.getUser();
+    if (!user || !user.permisos_globales) return false;
+    return (
+      user.permisos_globales.includes(permission) || user.permisos_globales.includes('superadmin')
+    );
+  }
+
+  isSuperAdmin(): boolean {
+    const user = this.getUser();
+    return user?.permisos_globales?.includes('superadmin') || false;
+  }
 }

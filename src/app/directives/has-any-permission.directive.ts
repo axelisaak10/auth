@@ -12,42 +12,44 @@ import {
 import { PermissionService } from '../services/permission.service';
 import { AuthService } from '../services/auth.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Subject, combineLatest } from 'rxjs';
+import { Subject } from 'rxjs';
 
 @Directive({
-  selector: '[appHasPermission]',
+  selector: '[appHasAnyPermission]',
   standalone: true,
 })
-export class HasPermissionDirective implements OnInit, OnChanges {
+export class HasAnyPermissionDirective implements OnInit, OnChanges {
   private permissionService = inject(PermissionService);
   private authService = inject(AuthService);
   private templateRef = inject(TemplateRef<unknown>);
   private viewContainer = inject(ViewContainerRef);
   private destroyRef = inject(DestroyRef);
 
-  private permission: string | string[] = [];
+  private permissions: string[] = [];
   private isRendered = false;
 
   private refresh$ = new Subject<void>();
 
   @Input()
-  set appHasPermission(value: string | string[]) {
-    this.permission = value;
+  set appHasAnyPermission(value: string | string[]) {
+    if (typeof value === 'string') {
+      this.permissions = value.split(',').map((p) => p.trim());
+    } else if (Array.isArray(value)) {
+      this.permissions = value;
+    } else {
+      this.permissions = [];
+    }
     this.updateView();
   }
 
   ngOnInit(): void {
-    this.authService.isLoggedIn;
-
-    combineLatest([this.refresh$])
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => {
-        this.updateView();
-      });
+    this.refresh$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.updateView();
+    });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['permission']) {
+    if (changes['permissions']) {
       this.updateView();
     }
   }
@@ -58,9 +60,7 @@ export class HasPermissionDirective implements OnInit, OnChanges {
       return;
     }
 
-    const hasAccess = Array.isArray(this.permission)
-      ? this.permissionService.hasAnyPermission(...this.permission)
-      : this.permissionService.hasPermission(this.permission);
+    const hasAccess = this.permissionService.hasAnyPermission(...this.permissions);
 
     if (hasAccess && !this.isRendered) {
       this.viewContainer.createEmbeddedView(this.templateRef);

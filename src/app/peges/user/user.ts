@@ -17,7 +17,7 @@ import { TableModule } from 'primeng/table';
 import { Toolbar } from 'primeng/toolbar';
 import { Select } from 'primeng/select';
 import { Tooltip } from 'primeng/tooltip';
-import { AuthService, UserSession } from '../../services/auth.service';
+import { AuthService, UserSession, API_GATEWAY } from '../../services/auth.service';
 import { HasPermissionDirective } from '../../directives/has-permission.directive';
 import { PermissionService } from '../../services/permission.service';
 import { TicketItem } from '../group/group';
@@ -80,14 +80,14 @@ export class User {
     public ps: PermissionService,
     private messageService: MessageService,
     private cdr: ChangeDetectorRef,
-    private http: HttpClient
+    private http: HttpClient,
   ) {
     this.user = this.authService.getUser();
     this.loadUserTickets();
   }
 
   get userInitial(): string {
-    return this.user?.nombreCompleto?.charAt(0).toUpperCase() ?? 'U';
+    return this.user?.nombre_completo?.charAt(0).toUpperCase() ?? 'U';
   }
 
   get fechaFormateada(): string {
@@ -102,20 +102,21 @@ export class User {
 
   /** Resumen de tickets */
   get ticketsAbiertos(): number {
-    return this.userTickets.filter(t => t.estado === 'Pendiente').length;
+    return this.userTickets.filter((t) => t.estado === 'Pendiente').length;
   }
   get ticketsEnProgreso(): number {
-    return this.userTickets.filter(t => t.estado === 'En progreso' || t.estado === 'Revisión').length;
+    return this.userTickets.filter((t) => t.estado === 'En progreso' || t.estado === 'Revisión')
+      .length;
   }
   get ticketsHechos(): number {
-    return this.userTickets.filter(t => t.estado === 'Finalizado').length;
+    return this.userTickets.filter((t) => t.estado === 'Finalizado').length;
   }
 
   emptyUser(): UserSession {
     return {
       id: '',
       email: '',
-      nombreCompleto: '',
+      nombre_completo: '',
       username: '',
       telefono: '',
       direccion: '',
@@ -146,12 +147,13 @@ export class User {
 
   private loadUserTickets(): void {
     if (!this.user?.grupoId) return;
-    this.http.get<TicketItem[]>(
-      `http://localhost:3444/tickets?grupoId=${this.user.grupoId}`,
-      { withCredentials: true }
-    ).subscribe({
-      next: (tickets) => { this.userTickets = tickets; },
-      error: (err) => console.error('Error loading user tickets', err)
+    const ticketsUrl = `${API_GATEWAY}/tickets?grupoId=${this.user.grupoId}`;
+    this.http.get<TicketItem[]>(ticketsUrl).subscribe({
+      next: (response: any) => {
+        const tickets = response?.data || response;
+        this.userTickets = Array.isArray(tickets) ? tickets : [];
+      },
+      error: (err) => console.error('Error loading user tickets', err),
     });
   }
 
@@ -161,11 +163,17 @@ export class User {
   }
 
   saveTicketStatus(): void {
-    const index = this.userTickets.findIndex(t => t.id === this.selectedTicket.id);
+    const index = this.userTickets.findIndex((t) => t.id === this.selectedTicket.id);
     if (index !== -1) {
       const now = new Date();
-      const dateStr = now.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' });
-      this.selectedTicket.historialCambios.push(`Estado cambiado a "${this.selectedTicket.estado}" el ${dateStr}`);
+      const dateStr = now.toLocaleDateString('es-MX', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      });
+      this.selectedTicket.historialCambios.push(
+        `Estado cambiado a "${this.selectedTicket.estado}" el ${dateStr}`,
+      );
       this.userTickets[index] = { ...this.selectedTicket };
     }
     this.showTicketStatusDialog = false;
@@ -173,25 +181,36 @@ export class User {
 
   getEstadoSeverity(estado: string): 'success' | 'warn' | 'danger' | 'info' | 'secondary' {
     switch (estado) {
-      case 'Finalizado': return 'success';
-      case 'En progreso': return 'info';
-      case 'Revisión': return 'warn';
-      case 'Bloqueado': return 'danger';
-      case 'Pendiente': return 'secondary';
-      default: return 'info';
+      case 'Finalizado':
+        return 'success';
+      case 'En progreso':
+        return 'info';
+      case 'Revisión':
+        return 'warn';
+      case 'Bloqueado':
+        return 'danger';
+      case 'Pendiente':
+        return 'secondary';
+      default:
+        return 'info';
     }
   }
 
   getPrioridadSeverity(prioridad: string): 'success' | 'warn' | 'danger' | 'info' {
     switch (prioridad) {
-      case 'Urgente': return 'danger';
+      case 'Urgente':
+        return 'danger';
       case 'Alta':
-      case 'Media-Alta': return 'warn';
+      case 'Media-Alta':
+        return 'warn';
       case 'Media':
-      case 'Media-Baja': return 'info';
+      case 'Media-Baja':
+        return 'info';
       case 'Baja':
-      case 'Mínima': return 'success';
-      default: return 'info';
+      case 'Mínima':
+        return 'success';
+      default:
+        return 'info';
     }
   }
 
@@ -211,7 +230,11 @@ export class User {
 
   saveProfile(): void {
     if (this.editPassword && this.editPassword !== this.editConfirmPassword) {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Las contraseñas no coinciden' });
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Las contraseñas no coinciden',
+      });
       return;
     }
 
@@ -226,7 +249,7 @@ export class User {
     this.isSavingProfile = true;
 
     const payload: any = {};
-    if (this.editData.nombreCompleto) payload.nombreCompleto = this.editData.nombreCompleto;
+    if (this.editData.nombre_completo) payload.nombre_completo = this.editData.nombre_completo;
     if (this.editData.username) payload.username = this.editData.username;
     if (this.editData.email) payload.email = this.editData.email;
     if (this.editData.telefono) payload.telefono = this.editData.telefono;
@@ -241,18 +264,30 @@ export class User {
       next: () => {
         this.isSavingProfile = false;
         this.showEditDialog = false;
-        this.user = { ...this.user!, ...payload };
+        const updatedUser = { ...payload };
+        if (payload.nombre_completo) {
+          updatedUser.nombreCompleto = payload.nombre_completo;
+        }
+        this.user = { ...this.user!, ...updatedUser };
         const safeSession = { ...this.user };
         delete (safeSession as any).password;
         localStorage.setItem('session', JSON.stringify(safeSession));
-        this.messageService.add({ severity: 'success', summary: 'Perfil Actualizado', detail: 'Tus datos se han guardado correctamente' });
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Perfil Actualizado',
+          detail: 'Tus datos se han guardado correctamente',
+        });
         this.cdr.detectChanges();
       },
       error: (err) => {
         this.isSavingProfile = false;
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: err.error?.message || 'No se pudo actualizar el perfil' });
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: err.error?.message || 'No se pudo actualizar el perfil',
+        });
         this.cdr.detectChanges();
-      }
+      },
     });
   }
 
@@ -271,7 +306,8 @@ export class User {
 
   suspendAccount(): void {
     this.confirmationService.confirm({
-      message: '¿Estás seguro de que deseas suspender tu cuenta? Tu cuenta quedará inactiva temporalmente.',
+      message:
+        '¿Estás seguro de que deseas suspender tu cuenta? Tu cuenta quedará inactiva temporalmente.',
       header: 'Suspender Cuenta',
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Sí, suspender',
