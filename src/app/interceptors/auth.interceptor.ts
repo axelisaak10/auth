@@ -6,7 +6,7 @@ import {
   HttpEvent,
   HttpErrorResponse,
 } from '@angular/common/http';
-import { Observable, catchError, switchMap, throwError } from 'rxjs';
+import { Observable, catchError, switchMap, throwError, tap } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
 @Injectable()
@@ -17,6 +17,10 @@ export class AuthInterceptor implements HttpInterceptor {
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     if (req.url.includes('/auth/login') || req.url.includes('/auth/register')) {
       return next.handle(req);
+    }
+
+    if (req.url.includes('/auth/logout') || req.url.includes('/auth/permissions')) {
+      return next.handle(req.clone({ withCredentials: true }));
     }
 
     const token = this.authService.getToken();
@@ -38,13 +42,19 @@ export class AuthInterceptor implements HttpInterceptor {
           this.isRefreshing = true;
 
           return this.authService.refreshToken().pipe(
+            tap({
+              next: () => {
+                this.isRefreshing = false;
+              },
+              error: () => {
+                this.isRefreshing = false;
+              },
+            }),
             switchMap(() => {
-              this.isRefreshing = false;
               const newToken = this.authService.getToken();
 
               if (!newToken) {
-                this.authService.logout();
-                return throwError(() => new Error('No se pudo obtener nuevo token'));
+                return throwError(() => new Error('No hay token disponible'));
               }
 
               const retryReq = req.clone({
@@ -57,7 +67,6 @@ export class AuthInterceptor implements HttpInterceptor {
             }),
             catchError((refreshError) => {
               this.isRefreshing = false;
-              this.authService.logout();
               return throwError(() => refreshError);
             }),
           );

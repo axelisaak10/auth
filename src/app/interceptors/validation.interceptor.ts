@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
   HttpInterceptor,
   HttpRequest,
@@ -9,6 +9,7 @@ import {
 } from '@angular/common/http';
 import { Observable, throwError, from } from 'rxjs';
 import { map, catchError, switchMap } from 'rxjs/operators';
+import { AuthService } from '../services/auth.service';
 
 export interface ApiResponse<T = any> {
   statusCode: number;
@@ -17,13 +18,29 @@ export interface ApiResponse<T = any> {
 }
 
 const SERVICE_VALIDATION: Record<string, { prefix: string; serviceName: string }> = {
-  '/auth': { prefix: 'microservicio-users', serviceName: 'users' },
+  '/auth/login': { prefix: 'microservicio-users', serviceName: 'users' },
+  '/auth/register': { prefix: 'microservicio-users', serviceName: 'users' },
+  '/auth/me': { prefix: 'microservicio-users', serviceName: 'users' },
+  '/auth/profile': { prefix: 'microservicio-users', serviceName: 'users' },
+  '/auth/permissions': { prefix: 'microservicio-users', serviceName: 'users' },
   '/users': { prefix: 'microservicio-users', serviceName: 'users' },
   '/groups': { prefix: 'microservicio-groups', serviceName: 'groups' },
   '/tickets': { prefix: 'microservicio-tickets', serviceName: 'tickets' },
 };
 
+const EXCLUDED_FROM_VALIDATION = [
+  '/auth/permissions',
+  '/auth/refresh',
+  '/auth/revoke',
+  '/auth/logout',
+];
+
 function validateResponseSchema(body: any, url: string): { valid: boolean; error?: string } {
+  const isExcluded = EXCLUDED_FROM_VALIDATION.some((endpoint) => url.includes(endpoint));
+  if (isExcluded) {
+    return { valid: true };
+  }
+
   if (!body || typeof body !== 'object') {
     return { valid: false, error: 'Response is not a valid JSON object' };
   }
@@ -73,6 +90,8 @@ function getErrorMessage(body: any): string {
 
 @Injectable()
 export class ValidationInterceptor implements HttpInterceptor {
+  private authService = inject(AuthService);
+
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     return next.handle(req).pipe(
       map((event: HttpEvent<unknown>) => {
@@ -107,6 +126,11 @@ export class ValidationInterceptor implements HttpInterceptor {
           errorMessage = getErrorMessage(error.error);
         } else if (error.message) {
           errorMessage = error.message;
+        }
+
+        if (error.status === 403 && errorMessage.includes('Permiso denegado')) {
+          this.authService.refreshPermissions();
+          return throwError(() => new Error('Permiso denegado. Contacta al administrador.'));
         }
 
         return throwError(() => new Error(errorMessage));

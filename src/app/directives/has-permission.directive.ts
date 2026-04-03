@@ -8,11 +8,12 @@ import {
   SimpleChanges,
   inject,
   DestroyRef,
+  effect,
 } from '@angular/core';
 import { PermissionService } from '../services/permission.service';
 import { AuthService } from '../services/auth.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Subject, combineLatest } from 'rxjs';
+import { Subject } from 'rxjs';
 
 @Directive({
   selector: '[appHasPermission]',
@@ -30,6 +31,13 @@ export class HasPermissionDirective implements OnInit, OnChanges {
 
   private refresh$ = new Subject<void>();
 
+  constructor() {
+    effect(() => {
+      const permissions = this.authService.userPermissions();
+      this.updateView();
+    });
+  }
+
   @Input()
   set appHasPermission(value: string | string[]) {
     this.permission = value;
@@ -38,12 +46,6 @@ export class HasPermissionDirective implements OnInit, OnChanges {
 
   ngOnInit(): void {
     this.authService.isLoggedIn;
-
-    combineLatest([this.refresh$])
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => {
-        this.updateView();
-      });
   }
 
   ngOnChanges(changes: SimpleChanges): void {

@@ -5,7 +5,7 @@ import { AuthService } from '../services/auth.service';
 
 @Directive({
   selector: '[hasPermission]',
-  standalone: true
+  standalone: true,
 })
 export class HasPermissionDirective {
   private permission: Permission | undefined;
@@ -14,16 +14,11 @@ export class HasPermissionDirective {
     private templateRef: TemplateRef<any>,
     private viewContainer: ViewContainerRef,
     private permissionService: PermissionService,
-    private authService: AuthService
+    private authService: AuthService,
   ) {
-    // React to login changes if authService.isLoggedIn changes
     effect(() => {
-      // Re-evaluate whenever auth state changes
-      if (this.authService.isLoggedIn()) {
-        this.updateView();
-      } else {
-        this.viewContainer.clear();
-      }
+      const permissions = this.authService.userPermissions();
+      this.updateView();
     });
   }
 
@@ -42,4 +37,3 @@ export class HasPermissionDirective {
     }
   }
 }
-

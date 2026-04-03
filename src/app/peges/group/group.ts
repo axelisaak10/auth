@@ -136,7 +136,7 @@ export class Group implements OnInit {
     public ps: PermissionService,
     private authService: AuthService,
     private http: HttpClient,
-  ) { }
+  ) {}
 
   ngOnInit(): void {
     this.loadGroups();
@@ -155,22 +155,28 @@ export class Group implements OnInit {
       error: (err) => {
         console.error('Error loading groups', err);
         this.isLoading = false;
-      }
+      },
     });
   }
 
   loadTickets(): void {
     this.http.get<TicketItem[]>(`${this.apiUrl}/tickets`, { withCredentials: true }).subscribe({
-      next: (tickets) => { this.allTickets = tickets; },
-      error: (err) => console.error('Error loading tickets', err)
+      next: (tickets) => {
+        this.allTickets = tickets;
+      },
+      error: (err) => console.error('Error loading tickets', err),
     });
   }
 
   loadMembers(): void {
-    this.http.get<GroupMember[]>(`${this.apiUrl}/groups/members`, { withCredentials: true }).subscribe({
-      next: (members) => { this.allMembers = members; },
-      error: (err) => console.error('Error loading members', err)
-    });
+    this.http
+      .get<GroupMember[]>(`${this.apiUrl}/groups/members`, { withCredentials: true })
+      .subscribe({
+        next: (members) => {
+          this.allMembers = members;
+        },
+        error: (err) => console.error('Error loading members', err),
+      });
   }
 
   // ====== Group Getters ======
@@ -180,18 +186,29 @@ export class Group implements OnInit {
     }
     const user = this.authService.getUser();
     if (user?.grupoId != null) {
-      return this.allGroups.filter(g => g.id === String(user.grupoId));
+      return this.allGroups.filter((g) => g.id === String(user.grupoId));
     }
     return [];
   }
 
   get currentUserName(): string {
-    return this.authService.getUser()?.nombreCompleto ?? '';
+    const user = this.authService?.getUser();
+    return user?.nombre_completo || user?.nombreCompleto || '';
   }
 
   // ====== Group CRUD ======
   emptyGroup(): GroupItem {
-    return { id: '', nivel: 'Medio', autoridad: '', nombre: '', integrantes: 0, tickets: 0, descripcion: '', adminId: '', userIds: [] };
+    return {
+      id: '',
+      nivel: 'Medio',
+      autoridad: '',
+      nombre: '',
+      integrantes: 0,
+      tickets: 0,
+      descripcion: '',
+      adminId: '',
+      userIds: [],
+    };
   }
 
   openNew(): void {
@@ -208,15 +225,27 @@ export class Group implements OnInit {
 
   saveGroup(): void {
     if (this.editMode) {
-      this.http.patch(`${this.apiUrl}/groups/${this.selectedGroup.id}`, this.selectedGroup, { withCredentials: true }).subscribe({
-        next: () => { this.loadGroups(); this.showDialog = false; },
-        error: (err) => console.error('Error updating group', err)
-      });
+      this.http
+        .patch(`${this.apiUrl}/groups/${this.selectedGroup.id}`, this.selectedGroup, {
+          withCredentials: true,
+        })
+        .subscribe({
+          next: () => {
+            this.loadGroups();
+            this.showDialog = false;
+          },
+          error: (err) => console.error('Error updating group', err),
+        });
     } else {
-      this.http.post<GroupItem>(`${this.apiUrl}/groups`, this.selectedGroup, { withCredentials: true }).subscribe({
-        next: () => { this.loadGroups(); this.showDialog = false; },
-        error: (err) => console.error('Error creating group', err)
-      });
+      this.http
+        .post<GroupItem>(`${this.apiUrl}/groups`, this.selectedGroup, { withCredentials: true })
+        .subscribe({
+          next: () => {
+            this.loadGroups();
+            this.showDialog = false;
+          },
+          error: (err) => console.error('Error creating group', err),
+        });
     }
   }
 
@@ -231,7 +260,7 @@ export class Group implements OnInit {
       accept: () => {
         this.http.delete(`${this.apiUrl}/groups/${group.id}`, { withCredentials: true }).subscribe({
           next: () => this.loadGroups(),
-          error: (err) => console.error('Error deleting group', err)
+          error: (err) => console.error('Error deleting group', err),
         });
       },
     });
@@ -239,7 +268,20 @@ export class Group implements OnInit {
 
   // ====== Ticket CRUD ======
   emptyTicket(): TicketItem {
-    return { id: 0, titulo: '', descripcion: '', estado: 'Pendiente', asignadoA: '', creadoPor: this.currentUserName, prioridad: 'Media', fechaCreacion: new Date(), fechaLimite: null, comentarios: '', historialCambios: [], grupoId: '' };
+    return {
+      id: 0,
+      titulo: '',
+      descripcion: '',
+      estado: 'Pendiente',
+      asignadoA: '',
+      creadoPor: this.currentUserName,
+      prioridad: 'Media',
+      fechaCreacion: new Date(),
+      fechaLimite: null,
+      comentarios: '',
+      historialCambios: [],
+      grupoId: '',
+    };
   }
 
   openNewTicket(groupId: string): void {
@@ -269,15 +311,27 @@ export class Group implements OnInit {
 
   saveTicket(): void {
     if (this.ticketEditMode) {
-      this.http.patch(`${this.apiUrl}/tickets/${this.selectedTicket.id}`, this.selectedTicket, { withCredentials: true }).subscribe({
-        next: () => { this.loadTickets(); this.showTicketDialog = false; },
-        error: (err) => console.error('Error updating ticket', err)
-      });
+      this.http
+        .patch(`${this.apiUrl}/tickets/${this.selectedTicket.id}`, this.selectedTicket, {
+          withCredentials: true,
+        })
+        .subscribe({
+          next: () => {
+            this.loadTickets();
+            this.showTicketDialog = false;
+          },
+          error: (err) => console.error('Error updating ticket', err),
+        });
     } else {
-      this.http.post<TicketItem>(`${this.apiUrl}/tickets`, this.selectedTicket, { withCredentials: true }).subscribe({
-        next: () => { this.loadTickets(); this.showTicketDialog = false; },
-        error: (err) => console.error('Error creating ticket', err)
-      });
+      this.http
+        .post<TicketItem>(`${this.apiUrl}/tickets`, this.selectedTicket, { withCredentials: true })
+        .subscribe({
+          next: () => {
+            this.loadTickets();
+            this.showTicketDialog = false;
+          },
+          error: (err) => console.error('Error creating ticket', err),
+        });
     }
   }
 
@@ -290,20 +344,24 @@ export class Group implements OnInit {
       rejectLabel: 'Cancelar',
       acceptButtonStyleClass: 'p-button-danger',
       accept: () => {
-        this.http.delete(`${this.apiUrl}/tickets/${ticket.id}`, { withCredentials: true }).subscribe({
-          next: () => this.loadTickets(),
-          error: (err) => console.error('Error deleting ticket', err)
-        });
+        this.http
+          .delete(`${this.apiUrl}/tickets/${ticket.id}`, { withCredentials: true })
+          .subscribe({
+            next: () => this.loadTickets(),
+            error: (err) => console.error('Error deleting ticket', err),
+          });
       },
     });
   }
 
   getTicketsByGroup(groupId: string): TicketItem[] {
-    return this.applyFilter(this.allTickets.filter(t => t.grupoId === groupId));
+    return this.applyFilter(this.allTickets.filter((t) => t.grupoId === groupId));
   }
 
   getTicketsByGroupAndStatus(groupId: string, estado: string): TicketItem[] {
-    return this.applyFilter(this.allTickets.filter(t => t.grupoId === groupId && t.estado === estado));
+    return this.applyFilter(
+      this.allTickets.filter((t) => t.grupoId === groupId && t.estado === estado),
+    );
   }
 
   setFilter(filter: 'all' | 'mine' | 'unassigned' | 'high'): void {
@@ -312,10 +370,14 @@ export class Group implements OnInit {
 
   private applyFilter(tickets: TicketItem[]): TicketItem[] {
     switch (this.activeFilter) {
-      case 'mine': return tickets.filter(t => t.asignadoA === this.currentUserName);
-      case 'unassigned': return tickets.filter(t => !t.asignadoA || t.asignadoA.trim() === '');
-      case 'high': return tickets.filter(t => t.prioridad === 'Alta' || t.prioridad === 'Urgente');
-      default: return tickets;
+      case 'mine':
+        return tickets.filter((t) => t.asignadoA === this.currentUserName);
+      case 'unassigned':
+        return tickets.filter((t) => !t.asignadoA || t.asignadoA.trim() === '');
+      case 'high':
+        return tickets.filter((t) => t.prioridad === 'Alta' || t.prioridad === 'Urgente');
+      default:
+        return tickets;
     }
   }
 
@@ -327,18 +389,24 @@ export class Group implements OnInit {
   }
 
   saveTicketStatus(): void {
-    this.http.patch(`${this.apiUrl}/tickets/${this.selectedTicket.id}/status`,
-      { estado: this.selectedTicket.estado, comentarios: this.selectedTicket.comentarios },
-      { withCredentials: true }
-    ).subscribe({
-      next: () => { this.loadTickets(); this.showTicketStatusDialog = false; },
-      error: (err) => console.error('Error updating ticket status', err)
-    });
+    this.http
+      .patch(
+        `${this.apiUrl}/tickets/${this.selectedTicket.id}/status`,
+        { estado: this.selectedTicket.estado, comentarios: this.selectedTicket.comentarios },
+        { withCredentials: true },
+      )
+      .subscribe({
+        next: () => {
+          this.loadTickets();
+          this.showTicketStatusDialog = false;
+        },
+        error: (err) => console.error('Error updating ticket status', err),
+      });
   }
 
   // ====== Members ======
   getMembersByGroup(groupId: string): GroupMember[] {
-    return this.allMembers.filter(m => m.grupoId === groupId);
+    return this.allMembers.filter((m) => m.grupoId === groupId);
   }
 
   openAddMember(groupId: string): void {
@@ -350,11 +418,23 @@ export class Group implements OnInit {
 
   addMember(): void {
     if (!this.newMemberNombre.trim() && !this.newMemberEmail.trim()) return;
-    const payload = { nombre: this.newMemberNombre.trim(), email: this.newMemberEmail.trim(), grupoId: this.addMemberGroupId };
-    this.http.post(`${this.apiUrl}/groups/${this.addMemberGroupId}/members`, payload, { withCredentials: true }).subscribe({
-      next: () => { this.loadMembers(); this.loadGroups(); this.showAddMemberDialog = false; },
-      error: (err) => console.error('Error adding member', err)
-    });
+    const payload = {
+      nombre: this.newMemberNombre.trim(),
+      email: this.newMemberEmail.trim(),
+      grupoId: this.addMemberGroupId,
+    };
+    this.http
+      .post(`${this.apiUrl}/groups/${this.addMemberGroupId}/members`, payload, {
+        withCredentials: true,
+      })
+      .subscribe({
+        next: () => {
+          this.loadMembers();
+          this.loadGroups();
+          this.showAddMemberDialog = false;
+        },
+        error: (err) => console.error('Error adding member', err),
+      });
   }
 
   removeMember(member: GroupMember, groupId: string): void {
@@ -366,10 +446,17 @@ export class Group implements OnInit {
       rejectLabel: 'Cancelar',
       acceptButtonStyleClass: 'p-button-danger',
       accept: () => {
-        this.http.delete(`${this.apiUrl}/groups/${groupId}/members/${member.id}`, { withCredentials: true }).subscribe({
-          next: () => { this.loadMembers(); this.loadGroups(); },
-          error: (err) => console.error('Error removing member', err)
-        });
+        this.http
+          .delete(`${this.apiUrl}/groups/${groupId}/members/${member.id}`, {
+            withCredentials: true,
+          })
+          .subscribe({
+            next: () => {
+              this.loadMembers();
+              this.loadGroups();
+            },
+            error: (err) => console.error('Error removing member', err),
+          });
       },
     });
   }
@@ -379,38 +466,53 @@ export class Group implements OnInit {
   }
 
   getGroupName(groupId: string): string {
-    return this.allGroups.find(g => g.id === groupId)?.nombre ?? '';
+    return this.allGroups.find((g) => g.id === groupId)?.nombre ?? '';
   }
 
   // ====== Helpers ======
   getNivelSeverity(nivel: string): 'success' | 'warn' | 'danger' | 'info' {
     switch (nivel) {
-      case 'Alto': return 'danger';
-      case 'Medio': return 'warn';
-      case 'Bajo': return 'success';
-      default: return 'info';
+      case 'Alto':
+        return 'danger';
+      case 'Medio':
+        return 'warn';
+      case 'Bajo':
+        return 'success';
+      default:
+        return 'info';
     }
   }
 
   getEstadoSeverity(estado: string): 'success' | 'warn' | 'danger' | 'info' | 'secondary' {
     switch (estado) {
-      case 'Finalizado': return 'success';
-      case 'En progreso': return 'info';
-      case 'Revisión': return 'warn';
-      case 'Bloqueado': return 'danger';
-      case 'Pendiente': return 'secondary';
-      default: return 'info';
+      case 'Finalizado':
+        return 'success';
+      case 'En progreso':
+        return 'info';
+      case 'Revisión':
+        return 'warn';
+      case 'Bloqueado':
+        return 'danger';
+      case 'Pendiente':
+        return 'secondary';
+      default:
+        return 'info';
     }
   }
 
   getPrioridadSeverity(prioridad: string): 'success' | 'warn' | 'danger' | 'info' {
     switch (prioridad) {
-      case 'Urgente': return 'danger';
-      case 'Alta': return 'warn';
-      case 'Media': return 'info';
+      case 'Urgente':
+        return 'danger';
+      case 'Alta':
+        return 'warn';
+      case 'Media':
+        return 'info';
       case 'Baja':
-      case 'Mínima': return 'success';
-      default: return 'info';
+      case 'Mínima':
+        return 'success';
+      default:
+        return 'info';
     }
   }
 
@@ -423,7 +525,13 @@ export class Group implements OnInit {
   }
 
   get hasGroupActions(): boolean {
-    return this.ps.hasAnyPermission('group:edit', 'group:delete', 'user:add', 'user:delete', 'ticket:add');
+    return this.ps.hasAnyPermission(
+      'group:edit',
+      'group:delete',
+      'user:add',
+      'user:delete',
+      'ticket:add',
+    );
   }
 
   get isStatusOnlyEdit(): boolean {
@@ -469,13 +577,16 @@ export class Group implements OnInit {
       return;
     }
     // Update via backend
-    this.http.patch(`${this.apiUrl}/tickets/${this.draggedTicket.id}/status`,
-      { estado: nuevoEstado },
-      { withCredentials: true }
-    ).subscribe({
-      next: () => this.loadTickets(),
-      error: (err) => console.error('Error updating ticket status via drag', err)
-    });
+    this.http
+      .patch(
+        `${this.apiUrl}/tickets/${this.draggedTicket.id}/status`,
+        { estado: nuevoEstado },
+        { withCredentials: true },
+      )
+      .subscribe({
+        next: () => this.loadTickets(),
+        error: (err) => console.error('Error updating ticket status via drag', err),
+      });
     this.draggedTicket = null;
   }
 }

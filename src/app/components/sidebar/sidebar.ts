@@ -25,15 +25,23 @@ export class Sidebar {
 
   private allMenuItems: MenuItem[] = [
     { label: 'Dashboard', icon: 'pi pi-home', route: '/home' },
-    { label: 'Usuarios', icon: 'pi pi-user', route: '/home/user', permissions: ['user:profile:view'] },
+    {
+      label: 'Usuarios',
+      icon: 'pi pi-user',
+      route: '/home/user',
+      permissions: ['user:profile:view'],
+    },
     { label: 'Grupos', icon: 'pi pi-th-large', route: '/home/group', permissions: ['group:view'] },
-    { label: 'Gestión de Usuarios', icon: 'pi pi-shield', route: '/home/admin-users', permissions: ['user:manage'] },
+    {
+      label: 'Gestión de Usuarios',
+      icon: 'pi pi-shield',
+      route: '/home/admin-users',
+      permissions: ['user:manage'],
+    },
   ];
 
   get menuItems(): MenuItem[] {
-    return this.allMenuItems.filter(item =>
-      !item.permissions || this.ps.hasAnyPermission(...item.permissions)
-    );
+    return this.allMenuItems;
   }
 
   onOverlayClick() {

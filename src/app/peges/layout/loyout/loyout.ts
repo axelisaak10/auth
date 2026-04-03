@@ -1,6 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet } from '@angular/router';
+import { Router, RouterOutlet } from '@angular/router';
 import { Button } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
@@ -19,11 +19,15 @@ export class Loyout {
 
   constructor(
     public authService: AuthService,
-    private confirmationService: ConfirmationService
-  ) { }
+    private router: Router,
+    private confirmationService: ConfirmationService,
+  ) {
+    this.authService.initRouterSync(this.router);
+  }
 
   get userName(): string {
-    return this.authService.getUser()?.nombreCompleto ?? 'Usuario';
+    const user = this.authService?.getUser();
+    return user?.nombre_completo || user?.nombreCompleto || 'Usuario';
   }
 
   get userInitial(): string {
@@ -48,7 +52,7 @@ export class Loyout {
       acceptButtonStyleClass: 'p-button-danger',
       accept: () => {
         this.logout();
-      }
+      },
     });
   }
 

@@ -1,5 +1,4 @@
-<!-- Toda la página requiere permiso user:profile:view -->
-<ng-container *appHasPermission="'user:profile:view'">
+@if (ps.hasPermission('user:profile:view')) {
   <div class="user-profile-container">
     <!-- Suspended Banner -->
     @if (accountSuspended) {
@@ -25,7 +24,7 @@
       <div class="profile-header">
         <p-avatar [label]="userInitial" size="xlarge" shape="circle" styleClass="profile-avatar" />
         <div class="profile-header-info">
-          <h2 class="profile-name">{{ user?.nombreCompleto }}</h2>
+          <h2 class="profile-name">{{ user?.nombre_completo }}</h2>
           <p class="profile-username">&#64;{{ user?.username }}</p>
         </div>
         <div class="header-actions">
@@ -426,7 +425,7 @@
     <!-- Confirm Dialog -->
     <p-confirmDialog />
   </div>
-</ng-container>
+}
 
 @if (!ps.hasPermission('user:profile:view')) {
   <div class="no-permission-message">

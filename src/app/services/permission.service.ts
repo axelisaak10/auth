@@ -11,8 +11,7 @@ export class PermissionService {
   private authService = inject(AuthService);
 
   private getPermissions(): string[] {
-    const user = this.authService.getUser();
-    return user?.permisos_globales ?? [];
+    return this.authService.userPermissions();
   }
 
   private isSuperAdmin(): boolean {

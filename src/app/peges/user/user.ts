@@ -83,7 +83,24 @@ export class User {
     private http: HttpClient,
   ) {
     this.user = this.authService.getUser();
+    this.loadUserData();
     this.loadUserTickets();
+  }
+
+  private loadUserData(): void {
+    this.authService.fetchUserProfile().subscribe({
+      next: (userData) => {
+        this.user = userData;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        const fallback = this.authService.getUser();
+        if (fallback) {
+          this.user = fallback;
+        }
+        this.cdr.detectChanges();
+      },
+    });
   }
 
   get userInitial(): string {
