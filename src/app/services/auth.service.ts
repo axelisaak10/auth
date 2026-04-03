@@ -348,6 +348,10 @@ export class AuthService {
     return this.http.post(this.apiRegister, userData);
   }
 
+  forgotPassword(email: string): Observable<any> {
+    return this.http.post(this.apiAuth + '/forgot-password', { email });
+  }
+
   refreshToken(): Observable<any> {
     return this.http.post(this.apiAuth + '/refresh', {}, { withCredentials: true }).pipe(
       tap((response: any) => {
@@ -397,11 +401,23 @@ export class AuthService {
   }
 
   createUserByAdmin(userData: any): Observable<any> {
-    return this.http.post(this.apiUsers, userData);
+    const token = this.getToken();
+    const options: any = { withCredentials: true };
+    if (token) {
+      options.headers = { Authorization: `Bearer ${token}` };
+    }
+
+    return this.http.post(this.apiUsers, userData, options);
   }
 
-  getAllPermissions(): Observable<string[]> {
-    return this.http.get<string[]>(this.apiPermissions);
+  updateUserByAdmin(userId: string, data: any): Observable<any> {
+    const token = this.getToken();
+    const options: any = { withCredentials: true };
+    if (token) {
+      options.headers = { Authorization: `Bearer ${token}` };
+    }
+
+    return this.http.patch(`${this.apiUsers}/${userId}`, data, options);
   }
 
   updateProfile(profileData: any): Observable<any> {
@@ -434,18 +450,6 @@ export class AuthService {
     );
   }
 
-  getAllUsers(): Observable<any[]> {
-    return this.http.get<any[]>(this.apiUsers);
-  }
-
-  deleteUser(userId: string): Observable<any> {
-    return this.http.delete(`${this.apiUsers}/${userId}`);
-  }
-
-  updateUserByAdmin(userId: string, data: any): Observable<any> {
-    return this.http.patch(`${this.apiUsers}/${userId}`, data);
-  }
-
   getUser(): UserSession | null {
     const signalUser = this._user();
     if (signalUser) return signalUser;
@@ -467,5 +471,111 @@ export class AuthService {
 
   async refreshPermissions(): Promise<void> {
     await this.executePermissionSync();
+  }
+
+  getAllUsers(filters?: { q?: string; username?: string; email?: string }): Observable<any[]> {
+    const token = this.getToken();
+    const options: any = { withCredentials: true };
+    if (token) {
+      options.headers = { Authorization: `Bearer ${token}` };
+    }
+
+    let url = this.apiUsers;
+    if (filters?.q) {
+      url += `?q=${encodeURIComponent(filters.q)}`;
+    } else if (filters?.username) {
+      url += `?username=${encodeURIComponent(filters.username)}`;
+    } else if (filters?.email) {
+      url += `?email=${encodeURIComponent(filters.email)}`;
+    }
+
+    return this.http.get(url, options) as Observable<any>;
+  }
+
+  searchUsers(query: string): Observable<any> {
+    return this.getAllUsers({ q: query });
+  }
+
+  getUserById(id: string): Observable<any> {
+    const token = this.getToken();
+    const options: any = { withCredentials: true };
+    if (token) {
+      options.headers = { Authorization: `Bearer ${token}` };
+    }
+
+    return this.http.get<any>(`${this.apiUsers}/${id}`, options);
+  }
+
+  createUser(userData: any): Observable<any> {
+    const token = this.getToken();
+    const options: any = { withCredentials: true };
+    if (token) {
+      options.headers = { Authorization: `Bearer ${token}` };
+    }
+
+    return this.http.post(this.apiUsers, userData, options);
+  }
+
+  updateUser(id: string, userData: any): Observable<any> {
+    const token = this.getToken();
+    const options: any = { withCredentials: true };
+    if (token) {
+      options.headers = { Authorization: `Bearer ${token}` };
+    }
+
+    return this.http.patch(`${this.apiUsers}/${id}`, userData, options);
+  }
+
+  deleteUser(id: string): Observable<any> {
+    const token = this.getToken();
+    const options: any = { withCredentials: true };
+    if (token) {
+      options.headers = { Authorization: `Bearer ${token}` };
+    }
+
+    return this.http.delete(`${this.apiUsers}/${id}`, options);
+  }
+
+  changeUserPassword(id: string): Observable<any> {
+    const token = this.getToken();
+    const options: any = { withCredentials: true };
+    if (token) {
+      options.headers = { Authorization: `Bearer ${token}` };
+    }
+
+    return this.http.post(`${this.apiUsers}/${id}/change-password`, {}, options);
+  }
+
+  assignUserPermissions(id: string, permisos: string[]): Observable<any> {
+    const token = this.getToken();
+    const options: any = { withCredentials: true };
+    if (token) {
+      options.headers = { Authorization: `Bearer ${token}` };
+    }
+
+    return this.http.post(`${this.apiUsers}/${id}/permissions`, { permisos }, options);
+  }
+
+  removeUserPermissions(id: string, permisos: string[]): Observable<any> {
+    const token = this.getToken();
+    const options: any = { withCredentials: true };
+    if (token) {
+      options.headers = { Authorization: `Bearer ${token}` };
+    }
+
+    return this.http.request('delete', `${this.apiUsers}/${id}/permissions`, {
+      body: { permisos },
+      ...options,
+    });
+  }
+
+  getAllPermissions(): Observable<any[]> {
+    const token = this.getToken();
+    const options: any = { withCredentials: true };
+    if (token) {
+      options.headers = { Authorization: `Bearer ${token}` };
+    }
+
+    return this.http.get(`${this.apiUsers}/permissions/list`, options) as Observable<any>;
   }
 }

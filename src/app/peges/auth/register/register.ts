@@ -1,5 +1,12 @@
 import { Component, signal, computed } from '@angular/core';
-import { ReactiveFormsModule, FormGroup, FormControl, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
+import {
+  ReactiveFormsModule,
+  FormGroup,
+  FormControl,
+  Validators,
+  AbstractControl,
+  ValidationErrors,
+} from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Button } from 'primeng/button';
@@ -38,23 +45,35 @@ export class Register {
       usuario: new FormControl('', [Validators.required, Validators.minLength(3)]),
       email: new FormControl('', [Validators.required, Validators.email]),
       nombreCompleto: new FormControl('', [Validators.required, Validators.minLength(3)]),
-      telefono: new FormControl('', [Validators.required, Validators.pattern(/^\d+$/), Validators.minLength(10), Validators.maxLength(10)]),
-      direccion: new FormControl('', [Validators.required]),
-      fechaNacimiento: new FormControl<Date | null>(null, [Validators.required, this.mayorDeEdadValidator]),
-      password: new FormControl('', [
+      telefono: new FormControl('', [
         Validators.required,
+        Validators.pattern(/^\d+$/),
         Validators.minLength(10),
         Validators.maxLength(10),
+      ]),
+      direccion: new FormControl('', [Validators.required]),
+      fechaNacimiento: new FormControl<Date | null>(null, [
+        Validators.required,
+        this.mayorDeEdadValidator,
+      ]),
+      password: new FormControl('', [
+        Validators.required,
+        Validators.minLength(8),
+        Validators.maxLength(20),
         Validators.pattern(/^(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/),
       ]),
       confirmPassword: new FormControl('', [Validators.required]),
     },
-    { validators: this.passwordsMatchValidator }
+    { validators: this.passwordsMatchValidator },
   );
 
   submitted = signal(false);
 
-  constructor(private messageService: MessageService, private authService: AuthService, private router: Router) {
+  constructor(
+    private messageService: MessageService,
+    private authService: AuthService,
+    private router: Router,
+  ) {
     this.maxDate = new Date();
   }
 
@@ -120,12 +139,16 @@ export class Register {
 
     const val = this.registerForm.value;
     const userData = {
-      nombreCompleto: val.nombreCompleto,
+      nombre_completo: val.nombreCompleto,
       username: val.usuario,
       email: val.email,
       password: val.password,
       direccion: val.direccion,
       telefono: val.telefono,
+      fecha_inicio: new Date().toISOString().split('T')[0],
+      fecha_nacimiento: val.fechaNacimiento
+        ? new Date(val.fechaNacimiento).toISOString().split('T')[0]
+        : null,
     };
 
     this.authService.registerPublic(userData).subscribe({
@@ -137,7 +160,7 @@ export class Register {
           life: 2000,
         });
         this.registerForm.reset();
-        setTimeout(() => this.router.navigate(['/auth/login']), 2000);
+        setTimeout(() => this.router.navigate(['/login']), 2000);
       },
       error: (err: any) => {
         this.messageService.add({
@@ -147,7 +170,7 @@ export class Register {
           life: 5000,
         });
         console.error('Error al registrar:', err);
-      }
+      },
     });
   }
 }

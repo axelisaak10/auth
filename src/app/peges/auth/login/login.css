@@ -1,103 +1,120 @@
-
 .auth-container {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
-    padding: 2rem;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+  padding: 2rem;
 }
 
 :host ::ng-deep .p-card {
-    width: 100%;
-    max-width: 420px;
-    border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  max-width: 420px;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
 .auth-header {
-    text-align: center;
-    margin-bottom: 2rem;
+  text-align: center;
+  margin-bottom: 2rem;
 }
 
 .auth-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: 16px;
-    background: linear-gradient(135deg, #302b63, #6366f1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1rem;
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #302b63, #6366f1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
 }
 
 .auth-icon i {
-    font-size: 1.5rem;
-    color: #ffffff;
+  font-size: 1.5rem;
+  color: #ffffff;
 }
 
 .auth-header h2 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #1e1e2f;
-    margin-bottom: 0.25rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e1e2f;
+  margin-bottom: 0.25rem;
 }
 
 .auth-header p {
-    color: #6b7280;
-    font-size: 0.9rem;
+  color: #6b7280;
+  font-size: 0.9rem;
 }
 
 .auth-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
 .field {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .field label {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #374151;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
 }
 
 .field input[pInputText] {
-    width: 100%;
+  width: 100%;
 }
 
 .w-full {
-    width: 100%;
+  width: 100%;
 }
 
 :host ::ng-deep .w-full .p-password-input {
-    width: 100%;
+  width: 100%;
 }
 
 .auth-footer {
-    text-align: center;
-    margin-top: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+  text-align: center;
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .auth-footer p {
-    font-size: 0.85rem;
-    color: #6b7280;
+  font-size: 0.85rem;
+  color: #6b7280;
 }
 
 .auth-footer a {
-    color: #6366f1;
-    text-decoration: none;
-    font-weight: 600;
-    transition: color 0.2s;
+  color: #6366f1;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s;
 }
 
 .auth-footer a:hover {
-    color: #4f46e5;
+  color: #4f46e5;
+}
+
+.forgot-password-link {
+  text-align: right;
+  margin-top: -0.5rem;
+}
+
+.forgot-password-link a {
+  font-size: 0.85rem;
+  color: #6366f1;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.forgot-password-link a:hover {
+  color: #4f46e5;
+  text-decoration: underline;
 }
