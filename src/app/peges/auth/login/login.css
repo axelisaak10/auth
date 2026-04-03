@@ -36,21 +36,22 @@
 }
 
 .auth-header h2 {
-  font-size: 1.5rem;
+  font-size: clamp(1.5rem, 5vw, 2rem);
   font-weight: 700;
-  color: #1e1e2f;
-  margin-bottom: 0.25rem;
+  color: #6366f1;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.02em;
 }
 
 .auth-header p {
-  color: #6b7280;
-  font-size: 0.9rem;
+  color: #4f46e5;
+  font-size: clamp(0.9rem, 2vw, 1rem);
 }
 
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: clamp(1rem, 2vw, 1.25rem);
 }
 
 .field {
@@ -60,13 +61,34 @@
 }
 
 .field label {
-  font-size: 0.85rem;
+  font-size: clamp(0.85rem, 2vw, 0.95rem);
   font-weight: 600;
   color: #374151;
+  text-align: left;
 }
 
 .field input[pInputText] {
   width: 100%;
+}
+
+:host ::ng-deep input.p-inputtext {
+  padding: 0.75rem 1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+:host ::ng-deep input.p-inputtext:focus {
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  border-color: #6366f1;
+}
+
+:host ::ng-deep .p-password-input {
+  padding: 0.75rem 1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+:host ::ng-deep .p-password-input:focus {
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  border-color: #6366f1;
 }
 
 .w-full {
