@@ -17,7 +17,7 @@ import { TableModule } from 'primeng/table';
 import { Toolbar } from 'primeng/toolbar';
 import { Select } from 'primeng/select';
 import { Tooltip } from 'primeng/tooltip';
-import { AuthService, UserSession, API_GATEWAY } from '../../services/auth.service';
+import { AuthService, UserSession, PermissionInfo, API_GATEWAY } from '../../services/auth.service';
 import { HasPermissionDirective } from '../../directives/has-permission.directive';
 import { PermissionService } from '../../services/permission.service';
 import { TicketItem } from '../group/group';
@@ -51,6 +51,8 @@ import { MessageService } from 'primeng/api';
 export class User {
   user: UserSession | null = null;
   accountSuspended = false;
+  allPermissions: PermissionInfo[] = [];
+  userPermissionsDetailed: PermissionInfo[] = [];
 
   // Edit modal
   showEditDialog = false;
@@ -85,18 +87,40 @@ export class User {
     this.user = this.authService.getUser();
     this.loadUserData();
     this.loadUserTickets();
+    this.loadAllPermissions();
+  }
+
+  private loadAllPermissions(): void {
+    this.authService.getAllPermissions().subscribe({
+      next: (response: any) => {
+        this.allPermissions = response?.data || response;
+        this.updateUserPermissionsDetailed();
+      },
+      error: (err) => console.error('Error loading permissions', err),
+    });
+  }
+
+  private updateUserPermissionsDetailed(): void {
+    if (!this.user?.permisos_globales || !this.allPermissions.length) return;
+    const userPermNames = this.user.permisos_globales;
+    this.userPermissionsDetailed = this.allPermissions.filter((p) =>
+      userPermNames.includes(p.nombre)
+    );
+    this.cdr.detectChanges();
   }
 
   private loadUserData(): void {
     this.authService.fetchUserProfile().subscribe({
       next: (userData) => {
         this.user = userData;
+        this.updateUserPermissionsDetailed();
         this.cdr.detectChanges();
       },
       error: () => {
         const fallback = this.authService.getUser();
         if (fallback) {
           this.user = fallback;
+          this.updateUserPermissionsDetailed();
         }
         this.cdr.detectChanges();
       },

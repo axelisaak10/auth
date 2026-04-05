@@ -71,6 +71,7 @@ export class AdminUsers implements OnInit {
 
   // Permisos disponibles (del backend)
   allPermissions: PermissionItem[] = [];
+  private permissionNameToId: Map<string, string> = new Map();
 
   // Lista de usuarios (del backend)
   allUsers: AdminUser[] = [];
@@ -92,6 +93,7 @@ export class AdminUsers implements OnInit {
   // ====== Permissions Dialog ======
   showPermissionsDialog = false;
   permissionsUser: AdminUser = this.emptyUser();
+  permissionsUserNames: string[] = [];
   isSavingPerms = false;
 
   ngOnInit() {
@@ -102,14 +104,17 @@ export class AdminUsers implements OnInit {
   loadPermissions() {
     this.authService.getAllPermissions().subscribe({
       next: (response: any) => {
-        const permsArray = Array.isArray(response)
-          ? response
-          : response.data || response.permissions || [];
-        this.allPermissions = permsArray.map((p: any) => ({
-          id: p.id || p.nombre,
-          nombre: p.nombre,
-          descripcion: p.descripcion || p.nombre,
-        }));
+        const rawPerms = response?.data?.[0]?.data || response?.data || response?.permissions || response || [];
+        const permsArray = Array.isArray(rawPerms) ? rawPerms : [];
+        this.allPermissions = permsArray.map((p: any) => {
+          const id = p.id || p.nombre;
+          this.permissionNameToId.set(p.nombre, id);
+          return {
+            id: id,
+            nombre: p.nombre,
+            descripcion: p.descripcion || p.nombre,
+          };
+        });
       },
       error: (err) => console.error('Error fetching permissions', err),
     });
@@ -119,7 +124,8 @@ export class AdminUsers implements OnInit {
     this.isLoading = true;
     this.authService.getAllUsers().subscribe({
       next: (users: any) => {
-        const usersArray = Array.isArray(users) ? users : users.data || [];
+        const rawData = users?.data?.[0]?.data || users?.data || users || [];
+        const usersArray = Array.isArray(rawData) ? rawData : [];
         this.allUsers = usersArray.map((u: any) => ({
           id: u.id,
           nombre_completo: u.nombre_completo || u.nombreCompleto || '',
@@ -243,7 +249,7 @@ export class AdminUsers implements OnInit {
     if (this.editUserMode) {
       // --- EDITAR usuario existente ---
       const payload: any = {
-        nombreCompleto: this.selectedUser.nombre_completo,
+        nombre_completo: this.selectedUser.nombre_completo,
         username: this.selectedUser.username,
         email: this.selectedUser.email,
         telefono: this.selectedUser.telefono,
@@ -281,9 +287,13 @@ export class AdminUsers implements OnInit {
         password: this.editPassword,
         telefono: this.selectedUser.telefono || undefined,
         direccion: this.selectedUser.direccion || undefined,
-        permisos: this.selectedUser.permisos_globales,
+        permisos_globales: this.selectedUser.permisos_globales.map((p) => this.permissionNameToId.get(p) || p),
       };
       if (fechaNac) payload.fecha_nacimiento = fechaNac;
+
+      // Convertir nombreCompleto a nombre_completo para el backend
+      payload.nombre_completo = this.selectedUser.nombre_completo;
+      delete payload.nombreCompleto;
 
       this.authService.createUserByAdmin(payload).subscribe({
         next: () => {
@@ -339,10 +349,10 @@ export class AdminUsers implements OnInit {
 
   deleteUser(user: AdminUser): void {
     this.confirmationService.confirm({
-      message: `¿Eliminar al usuario "${user.nombre_completo}"? Esta acción no se puede deshacer.`,
-      header: 'Confirmar Eliminación',
+      message: `¿Suspender al usuario "${user.nombre_completo}"? Se le quitarán todos sus permisos.`,
+      header: 'Confirmar Suspensión',
       icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Sí, eliminar',
+      acceptLabel: 'Sí, suspender',
       rejectLabel: 'Cancelar',
       acceptButtonStyleClass: 'p-button-danger',
       accept: () => {
@@ -350,8 +360,8 @@ export class AdminUsers implements OnInit {
           next: () => {
             this.messageService.add({
               severity: 'success',
-              summary: 'Eliminado',
-              detail: 'Usuario eliminado correctamente',
+              summary: 'Suspendido',
+              detail: 'Usuario suspendido correctamente',
             });
             this.loadUsers();
           },
@@ -359,7 +369,7 @@ export class AdminUsers implements OnInit {
             this.messageService.add({
               severity: 'error',
               summary: 'Error',
-              detail: err.error?.message || 'No se pudo eliminar el usuario',
+              detail: err.error?.message || 'No se pudo suspender el usuario',
             });
           },
         });
@@ -401,22 +411,23 @@ export class AdminUsers implements OnInit {
   // ====== Permissions ======
   openPermissions(user: AdminUser): void {
     this.permissionsUser = { ...user, permisos_globales: [...(user.permisos_globales || [])] };
+    this.permissionsUserNames = user.permisos_globales_detailed?.map(p => p.nombre) || [];
     setTimeout(() => {
       this.showPermissionsDialog = true;
       this.cdr.detectChanges();
     });
   }
 
-  hasPermissionCheck(perm: string): boolean {
-    return this.permissionsUser.permisos_globales.includes(perm);
+  hasPermissionCheck(permName: string): boolean {
+    return this.permissionsUserNames.includes(permName);
   }
 
-  togglePermission(perm: string): void {
-    const idx = this.permissionsUser.permisos_globales.indexOf(perm);
+  togglePermission(permName: string): void {
+    const idx = this.permissionsUserNames.indexOf(permName);
     if (idx >= 0) {
-      this.permissionsUser.permisos_globales.splice(idx, 1);
+      this.permissionsUserNames.splice(idx, 1);
     } else {
-      this.permissionsUser.permisos_globales.push(perm);
+      this.permissionsUserNames.push(permName);
     }
   }
 
@@ -433,36 +444,12 @@ export class AdminUsers implements OnInit {
   savePermissions(): void {
     this.isSavingPerms = true;
 
-    const currentPerms =
-      this.allUsers.find((u) => u.id === this.permissionsUser.id)?.permisos_globales || [];
-    const newPerms = this.permissionsUser.permisos_globales || [];
+    const newPermsNames = this.permissionsUserNames || [];
+    const permisosUUIDs = newPermsNames.map(n => this.permissionNameToId.get(n) || n);
 
-    const permsToAdd = newPerms.filter((p) => !currentPerms.includes(p));
-    const permsToRemove = currentPerms.filter((p) => !newPerms.includes(p));
-
-    const operations: Observable<any>[] = [];
-
-    if (permsToAdd.length > 0) {
-      operations.push(this.authService.assignUserPermissions(this.permissionsUser.id, permsToAdd));
-    }
-    if (permsToRemove.length > 0) {
-      operations.push(
-        this.authService.removeUserPermissions(this.permissionsUser.id, permsToRemove),
-      );
-    }
-
-    if (operations.length === 0) {
-      this.isSavingPerms = false;
-      this.showPermissionsDialog = false;
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Éxito',
-        detail: 'No hay cambios en permisos',
-      });
-      return;
-    }
-
-    forkJoin(operations).subscribe({
+    this.authService.updateUserByAdmin(this.permissionsUser.id, {
+      permisos_globales: permisosUUIDs,
+    }).subscribe({
       next: () => {
         this.isSavingPerms = false;
         this.showPermissionsDialog = false;

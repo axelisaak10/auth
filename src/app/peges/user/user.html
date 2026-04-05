@@ -139,10 +139,13 @@
             <i class="pi pi-key"></i>
           </div>
           <div class="detail-content">
-            <span class="detail-label">Permisos</span>
+            <span class="detail-label">Mis Permisos</span>
             <div class="permissions-list">
-              @for (permiso of user?.permisos_globales; track permiso) {
-                <p-tag [value]="permiso" severity="info" />
+              @for (perm of userPermissionsDetailed; track perm.nombre) {
+                <p-tag [value]="perm.descripcion" severity="info" />
+              }
+              @if (userPermissionsDetailed.length === 0) {
+                <span class="no-permissions">Sin permisos asignados</span>
               }
             </div>
           </div>

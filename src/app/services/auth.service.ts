@@ -4,6 +4,12 @@ import { Router, NavigationEnd } from '@angular/router';
 import { Observable, tap, catchError, throwError, lastValueFrom } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { map } from 'rxjs/operators';
+import { EventSourceService } from './event-source.service';
+
+export interface PermissionInfo {
+  nombre: string;
+  descripcion: string;
+}
 
 export interface UserSession {
   id: string;
@@ -17,6 +23,7 @@ export interface UserSession {
   fecha_nacimiento?: string;
   last_login?: string;
   permisos_globales?: string[];
+  permisos_detailed?: PermissionInfo[];
   grupoId?: number;
 }
 
@@ -25,7 +32,7 @@ export const API_GATEWAY = 'http://localhost:3008/api';
 const STORAGE_KEY = '_user_recovery';
 
 const SYNC_CONFIG = {
-  SYNC_INTERVAL: 60000,
+  SYNC_INTERVAL: 86400000,
   INACTIVITY_THRESHOLD: 300000,
   MAX_FAILURES: 3,
 };
@@ -36,6 +43,7 @@ const SYNC_CONFIG = {
 export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
+  private eventSourceService = inject(EventSourceService);
 
   private apiBase = API_GATEWAY;
   private apiAuth = `${this.apiBase}/auth`;
@@ -57,6 +65,12 @@ export class AuthService {
 
   constructor() {
     this.initializeFromRecovery();
+    if (this.checkRecovery()) {
+      setTimeout(() => {
+        this.eventSourceService.setPermissionsCallback(() => this.refreshPermissions());
+        this.eventSourceService.connect();
+      }, 1000);
+    }
   }
 
   private initializeFromRecovery(): void {
@@ -67,6 +81,11 @@ export class AuthService {
       this._user.set(recovery);
       this.cachedPermissions = [...(recovery.permisos_globales || [])];
       this._isLoggedIn.set(true);
+      
+      const storedToken = localStorage.getItem('_access_token');
+      if (storedToken) {
+        this.eventSourceService.setPermissionsCallback(() => this.refreshPermissions());
+      }
     }
     this.isInitialized = true;
   }
@@ -187,10 +206,9 @@ export class AuthService {
     router.events
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
       .subscribe(() => {
-        const user = this._user();
-        if (user && user.id) {
-          this.executePermissionSyncImmediate();
-        }
+        // No consultamos permisos en cada navegación
+        // Los permisos se actualizan automáticamente cada 24 horas
+        // y manualmente cuando el admin cambia permisos
       });
   }
 
@@ -247,7 +265,7 @@ export class AuthService {
     return response;
   }
 
-  private saveSession(userData: UserSession): void {
+  private saveSession(userData: UserSession, accessToken?: string): void {
     const sessionData: UserSession = {
       id: userData.id || '',
       email: userData.email || '',
@@ -266,6 +284,10 @@ export class AuthService {
     this._isLoggedIn.set(true);
 
     this.saveToRecovery(sessionData);
+
+    if (accessToken) {
+      localStorage.setItem('_access_token', accessToken);
+    }
   }
 
   private saveToRecovery(data: UserSession): void {
@@ -313,10 +335,31 @@ export class AuthService {
     return this.http.post(this.apiAuth + '/login', credentials, { withCredentials: true }).pipe(
       tap((response: any) => {
         const userData = this.extractUserData(response);
-        this.saveSession(userData);
+        const token = response?.access_token || response?.data?.access_token;
+        this.saveSession(userData, token);
         this.cachedPermissions = [...(userData.permisos_globales || [])];
         this.initActivityMonitor();
         this.startPermissionSync();
+        this.eventSourceService.setPermissionsCallback(() => this.refreshPermissions());
+        
+        let retryCount = 0;
+        const maxRetries = 5;
+        const retryDelay = 500;
+        
+        const tryConnect = () => {
+          retryCount++;
+          this.eventSourceService.connect();
+          
+          if (retryCount < maxRetries) {
+            setTimeout(() => {
+              if (!this.eventSourceService.isConnected()) {
+                tryConnect();
+              }
+            }, retryDelay);
+          }
+        };
+        
+        setTimeout(tryConnect, 200);
       }),
     );
   }
@@ -382,6 +425,7 @@ export class AuthService {
   logout(): void {
     this.stopPermissionSync();
     this.removeActivityListeners();
+    this.eventSourceService.disconnect();
     this.cachedPermissions = [];
     this.http.post(this.apiAuth + '/logout', {}).subscribe({
       next: () => this.clearSession(),
@@ -391,6 +435,7 @@ export class AuthService {
 
   private clearSession(): void {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem('_access_token');
     this._user.set(null);
     this._isLoggedIn.set(false);
     this.router.navigate(['/login']);
@@ -470,7 +515,7 @@ export class AuthService {
   }
 
   async refreshPermissions(): Promise<void> {
-    await this.executePermissionSync();
+    await this.executePermissionSyncImmediate();
   }
 
   getAllUsers(filters?: { q?: string; username?: string; email?: string }): Observable<any[]> {

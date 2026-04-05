@@ -111,11 +111,11 @@
               </ng-container>
               <ng-container *appHasPermission="'user:delete'">
                 <p-button
-                  icon="pi pi-trash"
+                  icon="pi pi-ban"
                   [rounded]="true"
                   [text]="true"
                   severity="danger"
-                  pTooltip="Eliminar usuario"
+                  pTooltip="Suspender usuario"
                   (onClick)="deleteUser(user)"
                 />
               </ng-container>
@@ -302,16 +302,15 @@
           <div class="form-row">
             <label>Permisos disponibles</label>
             <div class="permissions-grid">
-              @for (perm of allPermissions; track perm.id) {
+              @for (perm of allPermissions; track perm.nombre) {
                 <div
                   class="permission-item"
-                  [class.permission-active]="hasPermissionCheck(perm.id)"
-                  (click)="togglePermission(perm.id)"
+                  [class.permission-active]="hasPermissionCheck(perm.nombre)"
                 >
                   <input
                     type="checkbox"
-                    [checked]="hasPermissionCheck(perm.id)"
-                    (change)="togglePermission(perm.id)"
+                    [checked]="hasPermissionCheck(perm.nombre)"
+                    (change)="togglePermission(perm.nombre)"
                     style="
                       accent-color: var(--p-primary-color);
                       width: 18px;
