@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, computed } from '@angular/core';
 import { AuthService } from './auth.service';
 import { Permission } from '../models/permission.model';
 
@@ -10,26 +10,21 @@ export type { Permission } from '../models/permission.model';
 export class PermissionService {
   private authService = inject(AuthService);
 
-  private getPermissions(): string[] {
-    return this.authService.userPermissions();
-  }
-
-  private isSuperAdmin(): boolean {
-    return this.authService.isSuperAdmin();
-  }
+  private _permissions = computed(() => this.authService.userPermissions());
+  private _isSuperAdmin = computed(() => this.authService.isSuperAdmin());
 
   hasPermission(permission: Permission): boolean {
-    if (this.isSuperAdmin()) {
+    if (this._isSuperAdmin()) {
       return true;
     }
-    return this.getPermissions().includes(permission);
+    return this._permissions().includes(permission);
   }
 
   hasAnyPermission(...perms: Permission[]): boolean {
-    if (this.isSuperAdmin()) {
+    if (this._isSuperAdmin()) {
       return true;
     }
-    const current = this.getPermissions();
+    const current = this._permissions();
     return perms.some((p) => current.includes(p));
   }
 }

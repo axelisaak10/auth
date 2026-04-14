@@ -104,7 +104,8 @@ export class AdminUsers implements OnInit {
   loadPermissions() {
     this.authService.getAllPermissions().subscribe({
       next: (response: any) => {
-        const rawPerms = response?.data?.[0]?.data || response?.data || response?.permissions || response || [];
+        const rawPerms =
+          response?.data?.[0]?.data || response?.data || response?.permissions || response || [];
         const permsArray = Array.isArray(rawPerms) ? rawPerms : [];
         this.allPermissions = permsArray.map((p: any) => {
           const id = p.id || p.nombre;
@@ -287,7 +288,9 @@ export class AdminUsers implements OnInit {
         password: this.editPassword,
         telefono: this.selectedUser.telefono || undefined,
         direccion: this.selectedUser.direccion || undefined,
-        permisos_globales: this.selectedUser.permisos_globales.map((p) => this.permissionNameToId.get(p) || p),
+        permisos_globales: this.selectedUser.permisos_globales.map(
+          (p) => this.permissionNameToId.get(p) || p,
+        ),
       };
       if (fechaNac) payload.fecha_nacimiento = fechaNac;
 
@@ -411,7 +414,7 @@ export class AdminUsers implements OnInit {
   // ====== Permissions ======
   openPermissions(user: AdminUser): void {
     this.permissionsUser = { ...user, permisos_globales: [...(user.permisos_globales || [])] };
-    this.permissionsUserNames = user.permisos_globales_detailed?.map(p => p.nombre) || [];
+    this.permissionsUserNames = user.permisos_globales_detailed?.map((p) => p.nombre) || [];
     setTimeout(() => {
       this.showPermissionsDialog = true;
       this.cdr.detectChanges();
@@ -445,11 +448,11 @@ export class AdminUsers implements OnInit {
     this.isSavingPerms = true;
 
     const newPermsNames = this.permissionsUserNames || [];
-    const permisosUUIDs = newPermsNames.map(n => this.permissionNameToId.get(n) || n);
+    const permisosUUIDs = newPermsNames
+      .map((n) => this.permissionNameToId.get(n))
+      .filter((id) => id !== undefined);
 
-    this.authService.updateUserByAdmin(this.permissionsUser.id, {
-      permisos_globales: permisosUUIDs,
-    }).subscribe({
+    this.authService.assignUserPermissions(this.permissionsUser.id, permisosUUIDs).subscribe({
       next: () => {
         this.isSavingPerms = false;
         this.showPermissionsDialog = false;

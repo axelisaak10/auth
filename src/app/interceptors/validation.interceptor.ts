@@ -53,8 +53,9 @@ function validateResponseSchema(body: any, url: string): { valid: boolean; error
     return { valid: false, error: 'Missing or invalid intOpCode' };
   }
 
-  if (!body.data || !Array.isArray(body.data)) {
-    return { valid: false, error: 'Missing or invalid data (must be array)' };
+  // Allow data to be an array OR an object (for POST/PATCH responses that return single objects)
+  if (!body.data || (typeof body.data !== 'object')) {
+    return { valid: false, error: 'Missing or invalid data (must be array or object)' };
   }
 
   const matchedService = Object.entries(SERVICE_VALIDATION).find(([path]) => url.includes(path));
@@ -93,26 +94,43 @@ export class ValidationInterceptor implements HttpInterceptor {
   private authService = inject(AuthService);
 
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
+    console.log('[INTERCEPTOR] Request:', req.method, req.url);
     return next.handle(req).pipe(
       map((event: HttpEvent<unknown>) => {
         if (event instanceof HttpResponse) {
+          console.log('[INTERCEPTOR] Response:', event.status, req.url);
           const validation = validateResponseSchema(event.body, req.url);
 
           if (!validation.valid) {
-            console.error('Invalid response schema:', validation.error, req.url);
+            console.error('[INTERCEPTOR] Invalid response schema:', validation.error, req.url);
             throw new Error('Respuesta inválida del servidor');
           }
         }
         return event;
       }),
       catchError((error: HttpErrorResponse) => {
+        console.error('[INTERCEPTOR] Error:', {
+          status: error.status,
+          url: req.url,
+          message: error.message,
+          error: error.error,
+        });
+
         let errorMessage = 'Error de conexión';
+
+        // Rate Limiting (429)
+        if (error.status === 429) {
+          const retryAfter = error.error?.data?.[0]?.retryAfter || '1 minuto';
+          errorMessage = `Demasiadas solicitudes. Intenta de nuevo en ${retryAfter}.`;
+          return throwError(() => new Error(errorMessage));
+        }
 
         if (error.error instanceof Blob) {
           return from(error.error.text()).pipe(
             switchMap((text: string) => {
               try {
                 const body = JSON.parse(text);
+                console.log('[INTERCEPTOR] Error body (Blob):', body);
                 errorMessage = getErrorMessage(body);
               } catch {
                 errorMessage = 'Error en el servidor';
@@ -123,14 +141,14 @@ export class ValidationInterceptor implements HttpInterceptor {
         }
 
         if (error.error && typeof error.error === 'object') {
+          console.log('[INTERCEPTOR] Error body (object):', error.error);
           errorMessage = getErrorMessage(error.error);
         } else if (error.message) {
           errorMessage = error.message;
         }
 
-        if (error.status === 403 && errorMessage.includes('Permiso denegado')) {
-          this.authService.refreshPermissions();
-          return throwError(() => new Error('Permiso denegado. Contacta al administrador.'));
+        if (error.message) {
+          errorMessage = error.message;
         }
 
         return throwError(() => new Error(errorMessage));

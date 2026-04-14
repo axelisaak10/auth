@@ -27,7 +27,7 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        loadComponent: () => import('./peges/home/home').then((m) => m.Home),
+        loadComponent: () => import('./peges/dashboard/dashboard').then((m) => m.Dashboard),
       },
       {
         path: 'user',
@@ -40,6 +40,14 @@ export const routes: Routes = [
       {
         path: 'admin-users',
         loadComponent: () => import('./peges/admin-users/admin-users').then((m) => m.AdminUsers),
+      },
+      {
+        path: 'tickets',
+        loadComponent: () => import('./peges/tickets/tickets').then((m) => m.Tickets),
+      },
+      {
+        path: 'tickets/:groupId',
+        loadComponent: () => import('./peges/tickets/tickets').then((m) => m.Tickets),
       },
     ],
   },

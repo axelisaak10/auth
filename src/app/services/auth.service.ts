@@ -5,10 +5,17 @@ import { Observable, tap, catchError, throwError, lastValueFrom } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { map } from 'rxjs/operators';
 import { EventSourceService } from './event-source.service';
+import { NotificationService } from './notification.service';
 
 export interface PermissionInfo {
   nombre: string;
   descripcion: string;
+}
+
+export interface GrupoPermisos {
+  id: string;
+  nombre: string;
+  permisos: string[];
 }
 
 export interface UserSession {
@@ -25,6 +32,8 @@ export interface UserSession {
   permisos_globales?: string[];
   permisos_detailed?: PermissionInfo[];
   grupoId?: number;
+  grupos?: GrupoPermisos[];
+  permisos_por_grupo?: GrupoPermisos[];
 }
 
 export const API_GATEWAY = 'http://localhost:3008/api';
@@ -44,6 +53,7 @@ export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
   private eventSourceService = inject(EventSourceService);
+  private notificationService = inject(NotificationService);
 
   private apiBase = API_GATEWAY;
   private apiAuth = `${this.apiBase}/auth`;
@@ -62,14 +72,65 @@ export class AuthService {
   private pendingSync: boolean = false;
   private cachedPermissions: string[] = [];
   private isInitialized: boolean = false;
+  private externalTicketCallbacks: ((type: string, data: any) => void)[] = [];
+  private externalPermissionsCallbacks: (() => void)[] = [];
 
   constructor() {
     this.initializeFromRecovery();
     if (this.checkRecovery()) {
       setTimeout(() => {
-        this.eventSourceService.setPermissionsCallback(() => this.refreshPermissions());
+        this.eventSourceService.setPermissionsCallback(() => {
+          this.refreshPermissions();
+          this.notificationService.permissionsUpdated();
+          // Notificar a todos los componentes registrados
+          this.externalPermissionsCallbacks.forEach(cb => cb());
+        });
+        
+        // Configurar callback para notificaciones de tickets
+        this.eventSourceService.setTicketCallback((type: string, data: any) => {
+          switch (type) {
+            case 'ticket-created':
+              this.notificationService.ticketCreated(data.ticket?.titulo || 'Nuevo ticket');
+              break;
+            case 'ticket-updated':
+              this.notificationService.ticketUpdated(data.ticket?.titulo || 'Ticket');
+              break;
+            case 'ticket-state-changed':
+              this.notificationService.ticketStateChanged(data.ticket?.titulo || 'Ticket');
+              break;
+            case 'ticket-deleted':
+              this.notificationService.ticketDeleted(data.ticketId);
+              break;
+          }
+          // Notificar a todos los componentes registrados
+          this.externalTicketCallbacks.forEach(cb => cb(type, data));
+        });
+        
         this.eventSourceService.connect();
       }, 1000);
+    }
+  }
+
+  // Métodos públicos para que los componentes se suscriban a eventos SSE
+  registerTicketCallback(callback: (type: string, data: any) => void): void {
+    this.externalTicketCallbacks.push(callback);
+  }
+
+  registerPermissionsCallback(callback: () => void): void {
+    this.externalPermissionsCallbacks.push(callback);
+  }
+
+  unregisterTicketCallback(callback: (type: string, data: any) => void): void {
+    const index = this.externalTicketCallbacks.indexOf(callback);
+    if (index > -1) {
+      this.externalTicketCallbacks.splice(index, 1);
+    }
+  }
+
+  unregisterPermissionsCallback(callback: () => void): void {
+    const index = this.externalPermissionsCallbacks.indexOf(callback);
+    if (index > -1) {
+      this.externalPermissionsCallbacks.splice(index, 1);
     }
   }
 
@@ -81,7 +142,7 @@ export class AuthService {
       this._user.set(recovery);
       this.cachedPermissions = [...(recovery.permisos_globales || [])];
       this._isLoggedIn.set(true);
-      
+
       const storedToken = localStorage.getItem('_access_token');
       if (storedToken) {
         this.eventSourceService.setPermissionsCallback(() => this.refreshPermissions());
@@ -92,7 +153,13 @@ export class AuthService {
 
   user = computed(() => this._user());
   isLoggedIn = computed(() => this._isLoggedIn());
-  userPermissions = computed(() => this._user()?.permisos_globales || []);
+  userPermissions = computed(() => {
+    const user = this._user();
+    const globales = user?.permisos_globales || [];
+    const deGrupos = user?.grupos?.flatMap((g) => g.permisos || []) || [];
+    const todos = [...new Set([...globales, ...deGrupos])];
+    return todos;
+  });
 
   private isUserActive(): boolean {
     return Date.now() - this.lastActivity < SYNC_CONFIG.INACTIVITY_THRESHOLD;
@@ -119,18 +186,22 @@ export class AuthService {
     return !sortedCache.every((p, i) => p === sortedNew[i]);
   }
 
-  private updateUserPermissions(permissions: string[]): void {
+  private updateUserPermissions(permissions: string[], grupos: GrupoPermisos[] = []): void {
     const current = this._user() || this.getRecoveryData() || { id: '', email: '' };
     const updated: UserSession = {
       ...current,
       permisos_globales: permissions,
+      grupos: grupos,
     };
     this._user.set(updated);
     this.saveToRecovery(updated);
     this.cachedPermissions = [...permissions];
   }
 
-  private async fetchPermissionsFromServer(): Promise<string[]> {
+  private async fetchPermissionsFromServer(): Promise<{
+    permisos: string[];
+    grupos: GrupoPermisos[];
+  }> {
     const token = this.getToken();
     const options: any = { withCredentials: true };
     if (token) {
@@ -140,7 +211,12 @@ export class AuthService {
     const response: any = await lastValueFrom(
       this.http.get<any>(`${this.apiAuth}/permissions`, options),
     );
-    return response?.permisos_globales || [];
+
+    const unwrapped = this.extractUserData(response);
+    return {
+      permisos: unwrapped?.permisos_globales || response?.permisos_globales || [],
+      grupos: unwrapped?.permisos_por_grupo || response?.permisos_por_grupo || [],
+    };
   }
 
   private handleActivity(): void {
@@ -171,10 +247,10 @@ export class AuthService {
     this.isSyncing = true;
 
     try {
-      const newPermissions = await this.fetchPermissionsFromServer();
+      const { permisos, grupos } = await this.fetchPermissionsFromServer();
 
-      if (this.permissionsHaveChanged(newPermissions)) {
-        this.updateUserPermissions(newPermissions);
+      if (this.permissionsHaveChanged(permisos)) {
+        this.updateUserPermissions(permisos, grupos);
       }
 
       this.lastSyncTimestamp = Date.now();
@@ -222,10 +298,10 @@ export class AuthService {
     this.isSyncing = true;
 
     try {
-      const newPermissions = await this.fetchPermissionsFromServer();
+      const { permisos, grupos } = await this.fetchPermissionsFromServer();
 
-      if (this.permissionsHaveChanged(newPermissions)) {
-        this.updateUserPermissions(newPermissions);
+      if (this.permissionsHaveChanged(permisos)) {
+        this.updateUserPermissions(permisos, grupos);
       }
 
       this.lastSyncTimestamp = Date.now();
@@ -266,18 +342,23 @@ export class AuthService {
   }
 
   private saveSession(userData: UserSession, accessToken?: string): void {
+    const currentUser = this._user();
+    
     const sessionData: UserSession = {
-      id: userData.id || '',
-      email: userData.email || '',
-      username: userData.username || '',
-      nombre_completo: userData.nombre_completo || '',
-      nombreCompleto: userData.nombreCompleto || userData.nombre_completo || '',
-      direccion: userData.direccion || '',
-      telefono: userData.telefono || '',
-      fecha_inicio: userData.fecha_inicio || '',
-      fecha_nacimiento: userData.fecha_nacimiento || '',
-      last_login: userData.last_login || '',
-      permisos_globales: userData.permisos_globales || [],
+      id: userData.id || currentUser?.id || '',
+      email: userData.email || currentUser?.email || '',
+      username: userData.username || currentUser?.username || '',
+      nombre_completo: userData.nombre_completo || currentUser?.nombre_completo || '',
+      nombreCompleto: userData.nombreCompleto || userData.nombre_completo || currentUser?.nombre_completo || '',
+      direccion: userData.direccion || currentUser?.direccion || '',
+      telefono: userData.telefono || currentUser?.telefono || '',
+      fecha_inicio: userData.fecha_inicio || currentUser?.fecha_inicio || '',
+      fecha_nacimiento: userData.fecha_nacimiento || currentUser?.fecha_nacimiento || '',
+      last_login: userData.last_login || currentUser?.last_login || '',
+      permisos_globales: userData.permisos_globales || currentUser?.permisos_globales || [],
+      grupos: (userData.grupos && userData.grupos.length > 0) 
+        ? userData.grupos 
+        : currentUser?.grupos || [],
     };
 
     this._user.set(sessionData);
@@ -296,6 +377,7 @@ export class AuthService {
         id: data.id,
         email: data.email,
         permisos_globales: data.permisos_globales,
+        grupos: data.grupos,
         timestamp: Date.now(),
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(recoveryData));
@@ -320,6 +402,7 @@ export class AuthService {
         id: parsed.id || '',
         email: parsed.email || '',
         permisos_globales: parsed.permisos_globales || [],
+        grupos: parsed.grupos || [],
       };
     } catch {
       return null;
@@ -332,24 +415,36 @@ export class AuthService {
   }
 
   login(credentials: { email: string; password: string }): Observable<any> {
+    console.log('[AUTH] Login request:', { email: credentials.email });
     return this.http.post(this.apiAuth + '/login', credentials, { withCredentials: true }).pipe(
       tap((response: any) => {
+        console.log('[AUTH] Login response:', {
+          hasAccessToken: !!response?.access_token,
+          hasData: !!response?.data,
+          responseKeys: Object.keys(response || {}),
+        });
         const userData = this.extractUserData(response);
+        console.log('[AUTH] Extracted user data:', {
+          id: userData?.id,
+          email: userData?.email,
+          permisos_globales: userData?.permisos_globales,
+          grupos: userData?.grupos,
+        });
         const token = response?.access_token || response?.data?.access_token;
         this.saveSession(userData, token);
         this.cachedPermissions = [...(userData.permisos_globales || [])];
         this.initActivityMonitor();
         this.startPermissionSync();
         this.eventSourceService.setPermissionsCallback(() => this.refreshPermissions());
-        
+
         let retryCount = 0;
         const maxRetries = 5;
         const retryDelay = 500;
-        
+
         const tryConnect = () => {
           retryCount++;
           this.eventSourceService.connect();
-          
+
           if (retryCount < maxRetries) {
             setTimeout(() => {
               if (!this.eventSourceService.isConnected()) {
@@ -358,13 +453,14 @@ export class AuthService {
             }, retryDelay);
           }
         };
-        
+
         setTimeout(tryConnect, 200);
       }),
     );
   }
 
   fetchUserProfile(): Observable<UserSession> {
+    console.log('[AUTH] Fetching user profile...');
     const token = this.getToken();
     const options: any = { withCredentials: true };
     if (token) {
@@ -373,11 +469,22 @@ export class AuthService {
 
     return this.http.get<any>(this.apiAuth + '/me', options).pipe(
       map((response: any) => {
+        console.log('[AUTH] /me response:', {
+          hasData: !!response?.data,
+          responseKeys: Object.keys(response || {}),
+        });
         const userData = this.extractUserData(response);
+        console.log('[AUTH] /me user data:', {
+          id: userData?.id,
+          email: userData?.email,
+          permisos_globales: userData?.permisos_globales,
+          grupos: userData?.grupos,
+        });
         this.saveSession(userData);
         return userData;
       }),
       catchError((error) => {
+        console.error('[AUTH] /me error:', error);
         const recovery = this.getRecoveryData();
         if (recovery) {
           this._user.set(recovery);
@@ -503,10 +610,55 @@ export class AuthService {
 
   hasPermission(permission: string): boolean {
     const user = this._user() || this.getRecoveryData();
-    if (!user || !user.permisos_globales) return false;
-    return (
-      user.permisos_globales.includes(permission) || user.permisos_globales.includes('superadmin')
-    );
+    if (!user) return false;
+
+    if (user.permisos_globales?.includes(permission)) return true;
+    if (user.permisos_globales?.includes('superadmin')) return true;
+
+    if (user.grupos && user.grupos.length > 0) {
+      for (const grupo of user.grupos) {
+        if (grupo.permisos?.includes(permission)) return true;
+      }
+    }
+
+    return false;
+  }
+
+  hasGroupPermission(grupoId: string, permission: string): boolean {
+    const user = this._user() || this.getRecoveryData();
+    if (!user || !user.grupos) return false;
+
+    if (user.permisos_globales?.includes('superadmin')) return true;
+
+    const grupo = user.grupos.find((g) => g.id === grupoId);
+    if (!grupo) return false;
+
+    return grupo.permisos?.includes(permission);
+  }
+
+  getGroups(): { id: string; nombre: string; permisos: string[] }[] {
+    const user = this._user() || this.getRecoveryData();
+    return user?.grupos || [];
+  }
+
+  isMemberOf(grupoId: string): boolean {
+    const user = this._user() || this.getRecoveryData();
+    if (!user || !user.grupos) return false;
+    return user.grupos.some((g) => g.id === grupoId);
+  }
+
+  getUserPermissionsForGroup(grupoId: string): string[] {
+    const user = this._user() || this.getRecoveryData();
+    if (!user || !user.grupos) return [];
+    const grupo = user.grupos.find((g) => g.id === grupoId);
+    return grupo?.permisos || [];
+  }
+
+  hasGlobalPermission(permission: string): boolean {
+    const user = this._user() || this.getRecoveryData();
+    if (!user) return false;
+    if (user.permisos_globales?.includes('superadmin')) return true;
+    return user.permisos_globales?.includes(permission) || false;
   }
 
   isSuperAdmin(): boolean {
@@ -516,6 +668,11 @@ export class AuthService {
 
   async refreshPermissions(): Promise<void> {
     await this.executePermissionSyncImmediate();
+    try {
+      await lastValueFrom(this.refreshToken());
+    } catch (error) {
+      console.warn('No se pudo refresh el token después de actualizar permisos:', error);
+    }
   }
 
   getAllUsers(filters?: { q?: string; username?: string; email?: string }): Observable<any[]> {

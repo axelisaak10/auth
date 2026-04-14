@@ -171,15 +171,19 @@ export class User {
 
   emptyTicket(): TicketItem {
     return {
-      id: 0,
+      id: '',
       titulo: '',
       descripcion: '',
       estado: 'Pendiente',
-      asignadoA: '',
-      creadoPor: '',
+      estadoId: '',
       prioridad: 'Media',
+      prioridadId: '',
+      asignadoA: '',
+      asignadoId: '',
+      creadoPor: '',
       fechaCreacion: new Date(),
       fechaLimite: null,
+      fechaFinal: null,
       comentarios: '',
       historialCambios: [],
       grupoId: '',

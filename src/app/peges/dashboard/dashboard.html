@@ -1,0 +1,150 @@
+<div class="dashboard-wrapper">
+  
+  <!-- Encabezado / Hero Premium -->
+  <div class="hero-banner">
+    <div class="hero-backdrop"></div>
+    <div class="hero-content">
+      <div class="user-greeting">
+        <h1>¡Hola, {{ userName }}! 👋</h1>
+        <p>Analíticas y monitoreo de eficiencia de tickets en tiempo real</p>
+      </div>
+      
+      <div class="header-controls">
+        <span class="ctrl-label">VISUALIZANDO CONTEXTO:</span>
+        <p-select 
+          [options]="groups" 
+          [(ngModel)]="selectedGroupId"
+          optionLabel="nombre" 
+          optionValue="id" 
+          placeholder="Estadísticas Globales" 
+          [showClear]="true" 
+          dropdownIcon="pi pi-chevron-down"
+          (onChange)="onGroupChange()">
+          <ng-template let-g pTemplate="item">
+            <div class="combo-item">
+              <i class="pi pi-users text-primary"></i> 
+              <span>{{g.nombre}}</span>
+            </div>
+          </ng-template>
+        </p-select>
+      </div>
+    </div>
+  </div>
+
+  @if (isLoading) {
+    <div class="loading-state">
+      <div class="spinner-ring"></div>
+      <h3>Sincronizando Métricas</h3>
+      <p>Consultando base de datos y organizando los clusters de información...</p>
+    </div>
+  } @else {
+    
+    @if (kpiData.total === 0) {
+      <div class="empty-state glass-card">
+        <div class="empty-icon-wrap">
+          <i class="pi pi-box"></i>
+        </div>
+        <h2>Escenario Despejado</h2>
+        <p>No existen tickets registrados en este grupo de trabajo. Una vez que se levanten reportes, verás el flujo aquí.</p>
+        <p-button label="Ir al Tablero Kanban" icon="pi pi-plus" (onClick)="goToGroups()" styleClass="p-button-rounded p-button-primary mt-4 py-3 px-5 shadow-4" />
+      </div>
+    } @else {
+      <!-- Tarjetas Indicadoras Clave (KPI) -->
+      <div class="kpi-grid">
+        
+        <!-- Tarjeta: Total -->
+        <p-card styleClass="metric-card total-card">
+          <div class="metric-top">
+            <div class="metric-info">
+              <span class="metric-title">Volumen Total</span>
+              <span class="metric-value">{{ kpiData.total }}</span>
+            </div>
+            <div class="metric-icon total-bg"><i class="pi pi-folder-open"></i></div>
+          </div>
+          <div class="metric-bottom">
+            <p-progressBar [value]="100" [showValue]="false" styleClass="mb-2 total-bar"></p-progressBar>
+            <span class="metric-bottom-label">100% de la carga de trabajo</span>
+          </div>
+        </p-card>
+
+        <!-- Tarjeta: En Progreso -->
+        <p-card styleClass="metric-card progress-card">
+          <div class="metric-top">
+            <div class="metric-info">
+              <span class="metric-title">En Desarrollo</span>
+              <span class="metric-value">{{ kpiData.enProgreso }}</span>
+            </div>
+            <div class="metric-icon progress-bg"><i class="pi pi-sync pi-spin-hover"></i></div>
+          </div>
+          <div class="metric-bottom">
+            <span class="trend-badge"><i class="pi pi-arrow-up"></i> Trabajo Activo</span>
+          </div>
+        </p-card>
+
+        <!-- Tarjeta: Pendientes / Revisión -->
+        <p-card styleClass="metric-card pending-card">
+          <div class="metric-top">
+            <div class="metric-info">
+              <span class="metric-title">Estancados / Revisión</span>
+              <span class="metric-value">{{ kpiData.pendientes }}</span>
+            </div>
+            <div class="metric-icon pending-bg"><i class="pi pi-exclamation-circle"></i></div>
+          </div>
+          <div class="metric-bottom">
+            <span class="trend-badge warning"><i class="pi pi-clock"></i> Requiere Atención</span>
+          </div>
+        </p-card>
+
+        <!-- Tarjeta: Resueltos -->
+        <p-card styleClass="metric-card success-card">
+          <div class="metric-top">
+            <div class="metric-info">
+              <span class="metric-title">Finalizados</span>
+              <span class="metric-value">{{ kpiData.finalizado }}</span>
+            </div>
+            <div class="metric-icon success-bg"><i class="pi pi-check-circle"></i></div>
+          </div>
+          <div class="metric-bottom">
+            <p-progressBar [value]="resolutionRate" [showValue]="false" styleClass="mb-2 success-bar"></p-progressBar>
+            <span class="metric-bottom-label"><strong>{{ resolutionRate }}%</strong> de Tasa de Resolución</span>
+          </div>
+        </p-card>
+      </div>
+
+      <!-- Área de Gráficos -->
+      <div class="charts-wrapper">
+        <p-card styleClass="chart-card glass-panel">
+          <ng-template pTemplate="header">
+            <div class="chart-header">
+              <div class="header-icon"><i class="pi pi-chart-pie"></i></div>
+              <div class="header-text">
+                <h3>Ciclo de Vida del Ticket</h3>
+                <p>Proporción del ecosistema por estados operativos</p>
+              </div>
+            </div>
+            <p-divider></p-divider>
+          </ng-template>
+          <div class="chart-canvas">
+            <p-chart type="doughnut" [data]="statusChartData" [options]="statusChartOptions" height="320px"></p-chart>
+          </div>
+        </p-card>
+
+        <p-card styleClass="chart-card glass-panel">
+          <ng-template pTemplate="header">
+            <div class="chart-header">
+              <div class="header-icon"><i class="pi pi-chart-bar"></i></div>
+              <div class="header-text">
+                <h3>Atención Prioritaria</h3>
+                <p>Niveles de criticidad en la infraestructura</p>
+              </div>
+            </div>
+            <p-divider></p-divider>
+          </ng-template>
+          <div class="chart-canvas">
+            <p-chart type="bar" [data]="priorityChartData" [options]="priorityChartOptions" height="320px"></p-chart>
+          </div>
+        </p-card>
+      </div>
+    }
+  }
+</div>

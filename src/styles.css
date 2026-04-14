@@ -4,6 +4,10 @@
 /* Importar estilos de PrimeIcons */
 @import 'primeicons/primeicons.css';
 
+/* Importar estilos de Quill para p-editor */
+@import 'quill/dist/quill.core.css';
+@import 'quill/dist/quill.snow.css';
+
 /* ===== CSS Variables ===== */
 :root {
     --primary: #6366f1;
