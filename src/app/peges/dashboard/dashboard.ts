@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 
 import { AuthService } from '../../services/auth.service';
+import { environment } from '../../../environments/environment';
 
 
 import { ButtonModule } from 'primeng/button';
@@ -59,7 +60,7 @@ export class Dashboard implements OnInit {
 
   resolutionRate = 0;
 
-  private readonly apiUrl = 'http://localhost:3008/api';
+  private readonly apiUrl = environment.apiGateway;
 
   constructor(
     private authService: AuthService,

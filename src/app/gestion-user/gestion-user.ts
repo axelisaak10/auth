@@ -1,4 +1,5 @@
 import { Component, inject, OnInit } from '@angular/core';
+import { environment } from '../../environments/environment';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -44,7 +45,7 @@ export class GestionUser implements OnInit {
   private confirmationService = inject(ConfirmationService);
   private http = inject(HttpClient);
 
-  private readonly apiUrl = 'http://localhost:3444';
+  private readonly apiUrl = environment.apiGateway;
 
   user: UserSession | null = null;
 

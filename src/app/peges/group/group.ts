@@ -1,4 +1,5 @@
 import { Router } from '@angular/router';
+import { environment } from '../../../environments/environment';
 import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -99,7 +100,7 @@ export interface TicketItem {
   styleUrl: './group.css',
 })
 export class Group implements OnInit, OnDestroy {
-  private readonly apiUrl = 'http://localhost:3008/api';
+  private readonly apiUrl = environment.apiGateway;
 
   // Data arrays (loaded from backend)
   allGroups: GroupItem[] = [];

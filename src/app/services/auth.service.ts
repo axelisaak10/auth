@@ -6,6 +6,7 @@ import { filter } from 'rxjs/operators';
 import { map } from 'rxjs/operators';
 import { EventSourceService } from './event-source.service';
 import { NotificationService } from './notification.service';
+import { environment } from '../../environments/environment';
 
 export interface PermissionInfo {
   nombre: string;
@@ -36,7 +37,7 @@ export interface UserSession {
   permisos_por_grupo?: GrupoPermisos[];
 }
 
-export const API_GATEWAY = 'https://apigatway.onrender.com/api';
+export const API_GATEWAY = environment.apiGateway;
 
 const STORAGE_KEY = '_user_recovery';
 

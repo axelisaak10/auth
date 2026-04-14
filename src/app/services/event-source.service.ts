@@ -1,4 +1,5 @@
 import { Injectable, inject, NgZone } from '@angular/core';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
@@ -44,7 +45,7 @@ export class EventSourceService {
 
     try {
       const eventSource = new EventSource(
-        `http://localhost:3008/api/auth/events?token=${encodeURIComponent(token)}`,
+        `${environment.apiGateway}/auth/events?token=${encodeURIComponent(token)}`,
         {
           withCredentials: true,
         },
@@ -94,7 +95,7 @@ export class EventSourceService {
 
     try {
       const eventSource = new EventSource(
-        `http://localhost:3008/api/groups/events?token=${encodeURIComponent(token)}`,
+        `${environment.apiGateway}/groups/events?token=${encodeURIComponent(token)}`,
         {
           withCredentials: true,
         },
@@ -141,7 +142,7 @@ export class EventSourceService {
 
     try {
       const eventSource = new EventSource(
-        `http://localhost:3008/api/tickets/events?token=${encodeURIComponent(token)}`,
+        `${environment.apiGateway}/tickets/events?token=${encodeURIComponent(token)}`,
         {
           withCredentials: true,
         },
