@@ -1365,6 +1365,23 @@ export class Group implements OnInit, OnDestroy {
       });
   }
 
+  get allPermissionsSelected(): boolean {
+    return this.availableGroupPermissions.length > 0 &&
+      this.availableGroupPermissions.every(p => this.selectedPermissionsForMember.includes(p.nombre));
+  }
+
+  get somePermissionsSelected(): boolean {
+    return this.selectedPermissionsForMember.length > 0 && !this.allPermissionsSelected;
+  }
+
+  toggleAllPermissions(): void {
+    if (this.allPermissionsSelected) {
+      this.selectedPermissionsForMember = [];
+    } else {
+      this.selectedPermissionsForMember = this.availableGroupPermissions.map(p => p.nombre);
+    }
+  }
+
   togglePermission(permissionName: string, event?: Event): void {
     if (event) {
       event.preventDefault();

@@ -1,8 +1,14 @@
 .dashboard-page {
-    padding: 2rem;
+    padding: 0;
     max-width: 1400px;
     margin: 0 auto;
-    color: #ffffff;
+    color: #0f172a;
+    animation: fadeUp 0.22s ease;
+}
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 .header-info {
@@ -10,113 +16,135 @@
 }
 
 .page-title {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: #ffffff;
-    margin-bottom: 0.5rem;
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 0.25rem;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.6rem;
 }
 
 .page-title i {
-    color: #a78bfa;
-    font-size: 1.5rem;
+    color: #2563eb;
+    font-size: 1.15rem;
+    background: #eff6ff;
+    padding: 0.4rem;
+    border-radius: 8px;
 }
 
 .page-subtitle {
-    color: #94a3b8;
-    font-size: 1rem;
+    color: #64748b;
+    font-size: 0.85rem;
     margin: 0;
 }
 
-.mb-4 {
-    margin-bottom: 1.5rem;
-}
+.mb-4 { margin-bottom: 1.5rem; }
+.mt-4 { margin-top: 1.5rem; }
 
-.mt-4 {
-    margin-top: 2rem;
-}
-
+/* ===== Stats Grid ===== */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
 }
 
 .stat-card {
-    background: #111111;
-    border: 1px solid #333333;
-    border-radius: 12px;
-    padding: 1.5rem;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 1rem 1.1rem;
     display: flex;
+    flex-direction: row;
     align-items: center;
-    gap: 1rem;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    gap: 0.85rem;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.15s, box-shadow 0.15s;
 }
 
 .stat-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 16px rgba(0,0,0,0.5);
-    background: #1a1a1a;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.06);
 }
 
 .stat-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
+    width: 40px;
+    height: 40px;
+    border-radius: 9px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
+    font-size: 1.1rem;
     flex-shrink: 0;
 }
 
 .stat-info {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
 }
 
 .stat-value {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #ffffff;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #0f172a;
     line-height: 1;
 }
 
 .stat-label {
-    font-size: 0.85rem;
-    color: #94a3b8;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05rem;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: #64748b;
+    display: block;
+    margin-top: 0.2rem;
 }
 
-/* Card Themes */
-.total-card .stat-icon { background: rgba(167, 139, 250, 0.15); color: #a78bfa; border: 1px solid rgba(167, 139, 250, 0.3); }
-.pendientes-card .stat-icon { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
-.progreso-card .stat-icon { background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
-.revision-card .stat-icon { background: rgba(100, 116, 139, 0.15); color: #94a3b8; border: 1px solid rgba(100, 116, 139, 0.3); }
-.hechos-card .stat-icon { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+/* Card color themes */
+.total-card      .stat-icon { background: #eff6ff; color: #2563eb; }
+.pendientes-card .stat-icon { background: #f1f5f9; color: #64748b; }
+.progreso-card   .stat-icon { background: #eff6ff; color: #2563eb; }
+.revision-card   .stat-icon { background: #fffbeb; color: #f59e0b; }
+.bloqueado-card  .stat-icon { background: #fef2f2; color: #ef4444; }
+.hechos-card     .stat-icon { background: #f0fdf4; color: #22c55e; }
 
-/* Table styling for dark theme overrides if needed */
+/* ===== PrimeNG Card override ===== */
 :host ::ng-deep .p-card {
-    background: #111111;
-    border: 1px solid #333333;
-    border-radius: 12px;
+    background: #fff !important;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: none;
+    color: #0f172a !important;
 }
 
 :host ::ng-deep .p-card .p-card-body {
-    padding: 1.5rem;
+    padding: 1.1rem;
 }
 
-.text-primary {
-    color: #a78bfa !important;
+:host ::ng-deep .p-card .p-card-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 0.75rem;
 }
+
+.text-primary { color: #2563eb !important; }
+
 .text-xl {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #ffffff;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+.text-xl i { color: #2563eb; }
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .page-title { font-size: 1.1rem; }
+}
+@media (max-width: 480px) {
+    .stats-grid { grid-template-columns: 1fr 1fr; }
 }

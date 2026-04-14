@@ -1,10 +1,10 @@
 /* ======= LAYOUT GLOBAL ======= */
 .tickets-container {
     padding: 1rem;
-    height: calc(100vh - 80px); /* Ajustar según header global */
+    height: calc(100vh - 62px);
     display: flex;
     flex-direction: column;
-    background: var(--surface-ground, #f3f4f6);
+    background: #eef3fb;
     overflow: hidden;
 }
 
@@ -86,23 +86,21 @@
 /* ======= BOARD KANBAN ======= */
 .board-wrapper {
     flex: 1;
-    overflow-x: auto;
+    overflow-x: hidden;
     overflow-y: hidden;
     padding-bottom: 1rem;
 }
 
 .kanban-board {
     display: flex;
-    gap: 1.5rem;
+    gap: 1rem;
     height: 100%;
-    min-width: max-content;
-    padding-right: 1.5rem; /* Para que la última columna no quede rozando */
+    width: 100%;
 }
 
 .kanban-column {
-    width: 340px;
-    min-width: 340px;
-    flex-shrink: 0;
+    flex: 1;
+    min-width: 180px;
     display: flex;
     flex-direction: column;
     background: var(--surface-100, #f8fafc);
@@ -218,16 +216,64 @@
     background: #f0fdf4;
 }
 
+.locked-ticket {
+    cursor: default;
+    opacity: 0.92;
+}
+
 /* Contenido de Tarjeta */
 .kanban-card-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
+    gap: 0.5rem;
+}
+
+/* Indicador arrastre / candado */
+.drag-indicator {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+}
+
+.drag-handle {
+    color: #9ca3af;
+    font-size: 0.85rem;
+    cursor: grab;
+    transition: color 0.15s;
+}
+.drag-handle:hover { color: #3b82f6; }
+
+.lock-icon {
+    color: #d1d5db;
+    font-size: 0.8rem;
+}
+
+/* Fila asignado */
+.kanban-card-assignee-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.4rem 0 0.25rem;
+}
+
+.assignee-name {
+    font-size: 0.8rem;
+    color: var(--text-color-secondary, #6b7280);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+}
+
+.assignee-me {
+    color: #10b981;
+    font-weight: 600;
 }
 
 .kanban-card-title {
     font-weight: 700;
-    font-size: 1.05rem;
+    font-size: 0.95rem;
     color: var(--text-color, #111827);
     line-height: 1.3;
 }
@@ -449,9 +495,16 @@
 }
 
 @media screen and (max-width: 576px) {
+    .board-wrapper {
+        overflow-x: auto;
+    }
+    .kanban-board {
+        width: max-content;
+    }
     .kanban-column {
-        width: 280px;
-        min-width: 280px;
+        width: 260px;
+        min-width: 260px;
+        flex: none;
     }
     .tickets-container {
         padding: 0.5rem;

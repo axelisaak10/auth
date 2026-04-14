@@ -1,135 +1,154 @@
-
-<!-- Vista de selección de grupo (si no hay grupo seleccionado) -->
+<!-- Vista de selección de grupo -->
 @if (!selectedGroupId) {
-<section class="welcome-section">
-    <h1>¡Hola, {{ userName }}! 👋</h1>
-    <p>Selecciona un grupo para ver su dashboard.</p>
-</section>
 
-<section class="groups-selection">
-    <h2 class="section-title"><i class="pi pi-th-large"></i> Mis Grupos</h2>
+<div class="welcome-hero">
+    <div class="welcome-hero-bg"></div>
+    <div class="welcome-hero-content">
+        <div class="welcome-avatar">{{ userName.charAt(0).toUpperCase() }}</div>
+        <div>
+            <h1 class="welcome-title">¡Bienvenido, {{ userName }}!</h1>
+            <p class="welcome-sub">Selecciona un grupo para acceder a su tablero y tickets.</p>
+        </div>
+    </div>
+</div>
+
+<section class="groups-section">
+    <div class="section-header">
+        <h2 class="section-title">
+            <span class="section-title-icon"><i class="pi pi-users"></i></span>
+            Mis Grupos
+        </h2>
+        <span class="section-count">{{ userGroups.length }} grupos</span>
+    </div>
+
     <div class="groups-grid">
         @for (group of userGroups; track group.id) {
-        <div class="group-select-card" (click)="selectGroup(group.id)">
-            <div class="group-select-icon">
+        <div class="group-card" (click)="selectGroup(group.id)">
+            <div class="group-card-icon">
                 <i [class]="group.icon"></i>
             </div>
-            <div class="group-select-info">
+            <div class="group-card-body">
                 <h3>{{ group.nombre }}</h3>
                 <p>{{ group.descripcion }}</p>
             </div>
-            <i class="pi pi-arrow-right group-select-arrow"></i>
+            <div class="group-card-arrow">
+                <i class="pi pi-arrow-right"></i>
+            </div>
         </div>
         } @empty {
-        <div class="empty-groups">
-            <i class="pi pi-inbox"></i>
-            <p>No perteneces a ningún grupo.</p>
+        <div class="empty-state">
+            <div class="empty-icon"><i class="pi pi-inbox"></i></div>
+            <h3>Sin grupos asignados</h3>
+            <p>Contacta a un administrador para unirte a un grupo.</p>
         </div>
         }
     </div>
 </section>
+
 }
 
-<!-- Vista de Dashboard del Grupo seleccionado -->
+<!-- Dashboard del Grupo -->
 @if (selectedGroupId) {
-<section class="dashboard-header">
-    <div class="dashboard-header-left">
+
+<div class="dashboard-topbar">
+    <div class="dashboard-topbar-left">
         @if (userGroups.length > 1) {
         <p-button icon="pi pi-arrow-left" [text]="true" [rounded]="true" severity="secondary"
-            (onClick)="backToGroups()" pTooltip="Volver a grupos" />
+            pTooltip="Volver a grupos" (onClick)="backToGroups()" />
         }
-        <div>
-            <h1 class="dashboard-title">
-                <i class="pi pi-chart-bar"></i>
-                Dashboard — {{ selectedGroup?.nombre }}
-            </h1>
-            <p class="dashboard-subtitle">{{ selectedGroup?.descripcion }}</p>
+        <div class="dashboard-group-info">
+            <span class="dashboard-group-badge"><i class="pi pi-users"></i></span>
+            <div>
+                <h1 class="dashboard-title">{{ selectedGroup?.nombre }}</h1>
+                <p class="dashboard-subtitle">{{ selectedGroup?.descripcion }}</p>
+            </div>
         </div>
     </div>
     <div class="dashboard-actions">
-        <p-button label="Ver Tablero" icon="pi pi-th-large" severity="secondary" [outlined]="true"
+        <p-button label="Tablero Kanban" icon="pi pi-th-large" severity="secondary" [outlined]="true"
             (onClick)="goToKanban()" />
         <p-button label="Crear Ticket" icon="pi pi-plus" severity="primary"
             (onClick)="goToKanban()" />
     </div>
-</section>
+</div>
 
-<!-- Stats Cards -->
-<section class="stats-grid">
+<!-- Stats -->
+<div class="stats-grid">
     <div class="stat-card stat-pendiente">
-        <div class="stat-icon">
-            <i class="pi pi-clock"></i>
-        </div>
-        <div class="stat-info">
+        <div class="stat-card-top">
+            <span class="stat-icon"><i class="pi pi-clock"></i></span>
             <span class="stat-value">{{ ticketsPendientes }}</span>
-            <span class="stat-label">Pendientes</span>
         </div>
+        <span class="stat-label">Pendientes</span>
+        <div class="stat-bar"></div>
     </div>
     <div class="stat-card stat-progreso">
-        <div class="stat-icon">
-            <i class="pi pi-spinner"></i>
-        </div>
-        <div class="stat-info">
+        <div class="stat-card-top">
+            <span class="stat-icon"><i class="pi pi-sync"></i></span>
             <span class="stat-value">{{ ticketsEnProgreso }}</span>
-            <span class="stat-label">En Progreso</span>
         </div>
+        <span class="stat-label">En Progreso</span>
+        <div class="stat-bar"></div>
     </div>
     <div class="stat-card stat-revision">
-        <div class="stat-icon">
-            <i class="pi pi-search"></i>
-        </div>
-        <div class="stat-info">
+        <div class="stat-card-top">
+            <span class="stat-icon"><i class="pi pi-eye"></i></span>
             <span class="stat-value">{{ ticketsRevision }}</span>
-            <span class="stat-label">En Revisión</span>
         </div>
+        <span class="stat-label">En Revisión</span>
+        <div class="stat-bar"></div>
     </div>
     <div class="stat-card stat-bloqueado">
-        <div class="stat-icon">
-            <i class="pi pi-ban"></i>
-        </div>
-        <div class="stat-info">
+        <div class="stat-card-top">
+            <span class="stat-icon"><i class="pi pi-ban"></i></span>
             <span class="stat-value">{{ ticketsBloqueados }}</span>
-            <span class="stat-label">Bloqueados</span>
         </div>
+        <span class="stat-label">Bloqueados</span>
+        <div class="stat-bar"></div>
     </div>
     <div class="stat-card stat-hecho">
-        <div class="stat-icon">
-            <i class="pi pi-check-circle"></i>
-        </div>
-        <div class="stat-info">
+        <div class="stat-card-top">
+            <span class="stat-icon"><i class="pi pi-check-circle"></i></span>
             <span class="stat-value">{{ ticketsHechos }}</span>
-            <span class="stat-label">Finalizados</span>
         </div>
+        <span class="stat-label">Finalizados</span>
+        <div class="stat-bar"></div>
     </div>
-</section>
+</div>
 
-<!-- Mini-lista de tickets recientes -->
-<section class="activity-section">
-    <p-card>
-        <div class="activity-header">
-            <h2><i class="pi pi-list"></i> Tickets del Grupo</h2>
-        </div>
-        <div class="tickets-mini-list">
-            @for (ticket of groupTickets; track ticket.titulo) {
-            <div class="ticket-mini-item">
-                <div class="ticket-mini-info">
-                    <span class="ticket-mini-title">{{ ticket.titulo }}</span>
-                    <span class="ticket-mini-assignee">
-                        <i class="pi pi-user"></i> {{ ticket.asignadoA }}
-                    </span>
-                </div>
-                <div class="ticket-mini-tags">
-                    <p-tag [value]="ticket.estado" [severity]="getEstadoSeverity(ticket.estado)" />
-                    <p-tag [value]="ticket.prioridad" [severity]="getPrioridadSeverity(ticket.prioridad)" />
-                </div>
+<!-- Tickets recientes -->
+<div class="activity-panel">
+    <div class="activity-panel-header">
+        <span class="activity-panel-title">
+            <i class="pi pi-list"></i>
+            Tickets del Grupo
+        </span>
+        <span class="activity-panel-count">{{ groupTickets.length }} tickets</span>
+    </div>
+
+    <div class="tickets-list">
+        @for (ticket of groupTickets; track ticket.titulo) {
+        <div class="ticket-row">
+            <span class="ticket-row-dot" [ngClass]="'dot-' + ticket.estado.toLowerCase().replace(' ','-')"></span>
+            <div class="ticket-row-info">
+                <span class="ticket-row-title">{{ ticket.titulo }}</span>
+                <span class="ticket-row-assignee">
+                    <i class="pi pi-user"></i>
+                    {{ ticket.asignadoA || 'Sin asignar' }}
+                </span>
             </div>
-            } @empty {
-            <div class="empty-tickets">
-                <i class="pi pi-inbox"></i>
-                <p>No hay tickets en este grupo.</p>
+            <div class="ticket-row-tags">
+                <p-tag [value]="ticket.estado" [severity]="getEstadoSeverity(ticket.estado)" [rounded]="true" />
+                <p-tag [value]="ticket.prioridad" [severity]="getPrioridadSeverity(ticket.prioridad)" [rounded]="true" />
             </div>
-            }
         </div>
-    </p-card>
-</section>
+        } @empty {
+        <div class="empty-tickets">
+            <i class="pi pi-inbox"></i>
+            <span>No hay tickets en este grupo.</span>
+        </div>
+        }
+    </div>
+</div>
+
 }

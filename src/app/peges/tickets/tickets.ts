@@ -289,20 +289,30 @@ export class Tickets implements OnInit, OnDestroy {
     return !!group?.esCreador;
   }
 
-  canEditTicketState(ticket: TicketItem): boolean {
-    return this.ps.hasAnyPermission('ticket:edit', 'superadmin') || 
-           this.isCreatorOfGroup(ticket.grupoId) || 
-           ticket.asignadoId === this.currentUserId;
+  isAdmin(): boolean {
+    return this.ps.hasAnyPermission('superadmin');
+  }
+
+  /** Solo el asignado puede mover; admins y creadores del grupo también */
+  canMoveTicket(ticket: TicketItem): boolean {
+    if (this.isAdmin() || this.isCreatorOfGroup(ticket.grupoId)) return true;
+    return ticket.asignadoId === this.currentUserId;
   }
 
   canFullEditTicketInGroup(ticket: TicketItem): boolean {
-    return this.ps.hasAnyPermission('ticket:edit', 'superadmin') || 
+    return this.ps.hasAnyPermission('ticket:edit', 'superadmin') ||
            this.isCreatorOfGroup(ticket.grupoId);
   }
 
   canDeleteTicket(): boolean {
-    return this.ps.hasAnyPermission('ticket:delete', 'superadmin') || 
+    return this.ps.hasAnyPermission('ticket:delete', 'superadmin') ||
            (this.selectedGroupId ? this.isCreatorOfGroup(this.selectedGroupId) : false);
+  }
+
+  getMoveTooltip(ticket: TicketItem): string {
+    if (this.canMoveTicket(ticket)) return 'Arrastra para cambiar estado';
+    if (!ticket.asignadoId) return 'Ticket sin asignar — solo un admin puede moverlo';
+    return `Solo ${ticket.asignadoA} puede mover este ticket`;
   }
 
   // ============== DRAG & DROP ============== //
@@ -320,13 +330,13 @@ export class Tickets implements OnInit, OnDestroy {
     document.querySelectorAll('.kanban-column-body.drop-target').forEach(el => el.classList.remove('drop-target'));
   }
   onDragOver(event: DragEvent) {
-    if (this.draggedTicket && this.canEditTicketState(this.draggedTicket)) {
+    if (this.draggedTicket && this.canMoveTicket(this.draggedTicket)) {
       event.preventDefault();
       if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
     }
   }
   onDragEnter(event: DragEvent) {
-    if (this.draggedTicket && this.canEditTicketState(this.draggedTicket)) {
+    if (this.draggedTicket && this.canMoveTicket(this.draggedTicket)) {
       event.preventDefault();
       const target = event.currentTarget as HTMLElement;
       if (target.classList.contains('kanban-column-body')) target.classList.add('drop-target');
@@ -340,9 +350,8 @@ export class Tickets implements OnInit, OnDestroy {
     event.preventDefault();
     const target = event.currentTarget as HTMLElement;
     if (target.classList.contains('kanban-column-body')) target.classList.remove('drop-target');
-    if (this.draggedTicket && this.draggedTicket.estadoId !== newStatusId && this.canEditTicketState(this.draggedTicket)) {
-      const ticketToUpdate = this.draggedTicket;
-      this.updateTicketStatus(ticketToUpdate, newStatusId);
+    if (this.draggedTicket && this.draggedTicket.estadoId !== newStatusId && this.canMoveTicket(this.draggedTicket)) {
+      this.updateTicketStatus(this.draggedTicket, newStatusId);
     }
   }
 

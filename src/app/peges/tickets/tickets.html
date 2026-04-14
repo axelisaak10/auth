@@ -58,48 +58,79 @@
 
                 <div class="kanban-column-body">
                     @for (ticket of getGroupTicketsByStatus(col.value); track ticket.id) {
-                    <div class="kanban-card" 
-                        [ngClass]="['kanban-card-' + ticket.prioridad, ticket.asignadoId === currentUserId ? 'mine-ticket' : '']"
-                        [draggable]="canEditTicketState(ticket)"
+                    <div class="kanban-card"
+                        [ngClass]="{
+                            'kanban-card-Urgente':  ticket.prioridad === 'Urgente',
+                            'kanban-card-Alta':     ticket.prioridad === 'Alta',
+                            'kanban-card-Media':    ticket.prioridad === 'Media',
+                            'kanban-card-Baja':     ticket.prioridad === 'Baja',
+                            'kanban-card-Mínima':   ticket.prioridad === 'Mínima',
+                            'mine-ticket':          ticket.asignadoId === currentUserId,
+                            'locked-ticket':        !canMoveTicket(ticket)
+                        }"
+                        [draggable]="canMoveTicket(ticket)"
                         (dragstart)="onDragStart($event, ticket)"
                         (dragend)="onDragEnd($event)">
-                        
-                        <!-- Header de Tarjeta -->
+
+                        <!-- Header: título + indicador de arrastre -->
                         <div class="kanban-card-header">
                             <span class="kanban-card-title">{{ ticket.titulo }}</span>
+                            <span class="drag-indicator"
+                                [pTooltip]="getMoveTooltip(ticket)" tooltipPosition="left">
+                                @if (canMoveTicket(ticket)) {
+                                    <i class="pi pi-arrows-alt drag-handle"></i>
+                                } @else {
+                                    <i class="pi pi-lock lock-icon"></i>
+                                }
+                            </span>
                         </div>
 
-                        <!-- Info extra centralizada -->
+                        <!-- Asignado a: visible siempre -->
+                        <div class="kanban-card-assignee-row">
+                            <p-avatar
+                                [label]="ticket.asignadoA ? ticket.asignadoA.charAt(0).toUpperCase() : '?'"
+                                shape="circle"
+                                size="normal"
+                                [ngStyle]="{
+                                    'background-color': ticket.asignadoId === currentUserId ? '#10b981' : (ticket.asignadoA ? '#3b82f6' : '#9ca3af'),
+                                    'color': '#fff'
+                                }">
+                            </p-avatar>
+                            <span class="assignee-name" [ngClass]="{'assignee-me': ticket.asignadoId === currentUserId}">
+                                {{ ticket.asignadoId === currentUserId ? 'Tú' : (ticket.asignadoA || 'Sin asignar') }}
+                            </span>
+                        </div>
+
+                        <!-- Descripción -->
                         <div class="kanban-card-content">
                             <div class="kanban-card-desc" [innerHTML]="ticket.descripcion"></div>
                         </div>
 
-                        <!-- Meta Info Inferior -->
+                        <!-- Meta inferior -->
                         <div class="kanban-card-meta">
                             <div class="meta-bottom">
-                                <p-tag [value]="ticket.prioridad" [severity]="getPrioridadSeverity(ticket.prioridad)" class="priority-tag" rounded="true" />
-                                
-                                <div class="assignee-info" [pTooltip]="ticket.asignadoA || 'Sin asignar'" tooltipPosition="top">
-                                    <p-avatar [label]="ticket.asignadoA ? ticket.asignadoA.charAt(0).toUpperCase() : '?'" 
-                                              shape="circle" 
-                                              styleClass="assignee-avatar" 
-                                              [ngStyle]="{'background-color': ticket.asignadoA ? '#3b82f6' : '#9ca3af', 'color': '#ffffff'}">
-                                    </p-avatar>
-                                </div>
+                                <p-tag [value]="ticket.prioridad" [severity]="getPrioridadSeverity(ticket.prioridad)" class="priority-tag" [rounded]="true" />
                             </div>
-                            
+
                             <div class="meta-footer">
-                                <span class="date-due" [ngStyle]="{'color': ticket.fechaLimite && ticket.fechaLimite < today ? '#ef4444' : '#6b7280'}">
+                                <span class="date-due"
+                                    [ngStyle]="{'color': ticket.fechaLimite && ticket.fechaLimite < today ? '#ef4444' : '#6b7280'}">
                                     <i class="pi pi-calendar"></i>
                                     {{ ticket.fechaLimite ? (ticket.fechaLimite | date:'dd/MM') : '--/--' }}
                                 </span>
                                 <div class="kanban-card-actions">
-                                    <p-button icon="pi pi-comments" [text]="true" [rounded]="true" severity="secondary" size="small" (onClick)="openTicketDetails(ticket)" pTooltip="Ver / Comentar" />
+                                    <p-button icon="pi pi-comments" [text]="true" [rounded]="true"
+                                        severity="secondary" size="small"
+                                        (onClick)="openTicketDetails(ticket)" pTooltip="Ver / Comentar" />
                                     @if (canFullEditTicketInGroup(ticket)) {
-                                    <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" severity="info" size="small" (onClick)="editTicket(ticket)" pTooltip="Editar" />
+                                    <p-button icon="pi pi-pencil" [text]="true" [rounded]="true"
+                                        severity="info" size="small"
+                                        (onClick)="editTicket(ticket)" pTooltip="Editar" />
                                     }
                                     @if (canDeleteTicket()) {
-                                        <p-button icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger" size="small" (onClick)="deleteTicket(ticket)" pTooltip="Eliminar" />
+                                    <p-button icon="pi pi-trash" [text]="true" [rounded]="true"
+                                        severity="danger" size="small"
+                                        (onClick)="deleteTicket(ticket)" pTooltip="Eliminar" />
                                     }
                                 </div>
                             </div>

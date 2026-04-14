@@ -1,25 +1,23 @@
-<!-- Backdrop overlay para móvil -->
 @if (visible()) {
 <div class="sidebar-backdrop" (click)="onOverlayClick()"></div>
 }
 
 <aside class="sidebar" [class.sidebar-open]="visible()">
-    <!-- Logo -->
     <div class="sidebar-brand">
-        <div class="brand-icon">
-            <i class="pi pi-shield"></i>
-        </div>
+        <div class="brand-icon"><i class="pi pi-shield"></i></div>
         <span class="brand-text">Seguridad</span>
+        <span class="brand-version">v1.0</span>
     </div>
 
-    <!-- Menú de navegación -->
     <nav class="sidebar-nav">
+        <span class="nav-section-label">Menú</span>
         <ul class="nav-list">
             @for (item of menuItems; track item.label) {
             <li>
                 <a class="nav-item" [routerLink]="item.route" routerLinkActive="nav-active"
-                    [routerLinkActiveOptions]="{ exact: true }" pRipple (click)="onOverlayClick()">
-                    <i [class]="item.icon"></i>
+                    [routerLinkActiveOptions]="{ exact: item.route === '/home' }"
+                    pRipple (click)="onOverlayClick()">
+                    <span class="nav-item-icon"><i [class]="item.icon"></i></span>
                     <span>{{ item.label }}</span>
                 </a>
             </li>
@@ -27,11 +25,11 @@
         </ul>
     </nav>
 
-    <!-- Footer del sidebar -->
     <div class="sidebar-footer">
         <div class="sidebar-footer-content">
-            <i class="pi pi-info-circle"></i>
-            <span>v1.0.0</span>
+            <i class="pi pi-circle-fill" style="font-size:0.45rem;color:#22c55e"></i>
+            <span>Sistema activo</span>
+            <div class="online-dot"></div>
         </div>
     </div>
 </aside>

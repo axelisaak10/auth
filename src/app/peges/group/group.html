@@ -268,6 +268,22 @@
                 } @else {
                     <div class="permissions-list" style="display:flex;flex-direction:column;gap:1.5rem;">
                         <p class="permissions-subtitle" style="margin:0;font-weight:600;color:var(--text-color);">Selecciona los permisos que tendrá dentro de este grupo:</p>
+
+                        <!-- Selector de todos -->
+                        <div class="permission-item select-all-row"
+                            (click)="toggleAllPermissions()"
+                            style="display:flex;gap:1rem;padding:0.85rem 1rem;border:2px solid var(--primary-color);border-radius:0.75rem;cursor:pointer;background:var(--primary-50, rgba(99,102,241,0.07));align-items:center;">
+                            <p-checkbox [binary]="true" [ngModel]="allPermissionsSelected" [indeterminate]="somePermissionsSelected" style="pointer-events:none;" inputId="chk-all"></p-checkbox>
+                            <div style="display:flex;flex-direction:column;gap:0.2rem;">
+                                <span style="font-weight:700;color:var(--primary-color);">
+                                    {{ allPermissionsSelected ? 'Deseleccionar todos' : 'Seleccionar todos' }}
+                                </span>
+                                <span style="font-size:0.82rem;color:var(--text-color-secondary);">
+                                    {{ selectedPermissionsForMember.length }} de {{ availableGroupPermissions.length }} permisos seleccionados
+                                </span>
+                            </div>
+                        </div>
+
                         @for (perm of availableGroupPermissions; track perm.nombre) {
                         <div class="permission-item" (click)="togglePermission(perm.nombre, $event)" style="display:flex;gap:1rem;padding:1rem;border:1px solid var(--surface-border);border-radius:0.75rem;cursor:pointer;">
                             <p-checkbox [value]="perm.nombre" [(ngModel)]="selectedPermissionsForMember" style="pointer-events:none;" [inputId]="'chk-'+perm.nombre"></p-checkbox>
