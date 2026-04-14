@@ -36,7 +36,7 @@ export interface UserSession {
   permisos_por_grupo?: GrupoPermisos[];
 }
 
-export const API_GATEWAY = 'http://localhost:3008/api';
+export const API_GATEWAY = 'https://apigatway.onrender.com/api';
 
 const STORAGE_KEY = '_user_recovery';
 
