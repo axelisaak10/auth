@@ -384,7 +384,7 @@ export class Tickets implements OnInit, OnDestroy {
   saveTicket(): void {
     const postPayload = {
       titulo: this.selectedTicket.titulo,
-      descripcion: this.selectedTicket.descripcion,
+      descripcion: this.selectedTicket.descripcion || undefined,
       prioridad_id: this.selectedTicket.prioridadId,
       estado_id: this.selectedTicket.estadoId,
       asignado_id: this.selectedTicket.asignadoId || undefined,
@@ -394,7 +394,7 @@ export class Tickets implements OnInit, OnDestroy {
 
     const putPayload = {
       titulo: this.selectedTicket.titulo,
-      descripcion: this.selectedTicket.descripcion,
+      descripcion: this.selectedTicket.descripcion || undefined,
       asignado_id: this.selectedTicket.asignadoId || undefined,
       fecha_final: this.selectedTicket.fechaLimite ? new Date(this.selectedTicket.fechaLimite).toISOString() : null,
     };
