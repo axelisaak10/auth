@@ -382,18 +382,25 @@ export class Tickets implements OnInit, OnDestroy {
   }
 
   saveTicket(): void {
-    const payload = {
+    const postPayload = {
       titulo: this.selectedTicket.titulo,
       descripcion: this.selectedTicket.descripcion,
       prioridad_id: this.selectedTicket.prioridadId,
       estado_id: this.selectedTicket.estadoId,
-      asignacion_id: this.selectedTicket.asignadoId,
+      asignado_id: this.selectedTicket.asignadoId || undefined,
       fecha_final: this.selectedTicket.fechaLimite ? new Date(this.selectedTicket.fechaLimite).toISOString() : null,
       grupo_id: this.selectedTicket.grupoId
     };
 
+    const putPayload = {
+      titulo: this.selectedTicket.titulo,
+      descripcion: this.selectedTicket.descripcion,
+      asignado_id: this.selectedTicket.asignadoId || undefined,
+      fecha_final: this.selectedTicket.fechaLimite ? new Date(this.selectedTicket.fechaLimite).toISOString() : null,
+    };
+
     if (this.ticketEditMode) {
-      this.http.put(`${this.apiUrl}/tickets/${this.selectedTicket.id}`, payload, { withCredentials: true }).subscribe({
+      this.http.put(`${this.apiUrl}/tickets/${this.selectedTicket.id}`, putPayload, { withCredentials: true }).subscribe({
         next: () => {
           this.loadTickets();
           this.showTicketDialog = false;
@@ -402,7 +409,7 @@ export class Tickets implements OnInit, OnDestroy {
         error: err => console.error('Error', err)
       });
     } else {
-      this.http.post(`${this.apiUrl}/tickets`, payload, { withCredentials: true }).subscribe({
+      this.http.post(`${this.apiUrl}/tickets`, postPayload, { withCredentials: true }).subscribe({
         next: () => {
           this.loadTickets();
           this.showTicketDialog = false;
