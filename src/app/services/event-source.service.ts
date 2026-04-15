@@ -249,7 +249,7 @@ export class EventSourceService {
         return decodeURIComponent(value);
       }
     }
-    return null;
+    return localStorage.getItem('_access_token');
   }
 
   disconnect(): void {

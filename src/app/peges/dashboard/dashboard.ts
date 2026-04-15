@@ -73,6 +73,8 @@ export class Dashboard implements OnInit {
     const user = this.authService.getUser();
     this.userName = user?.nombre_completo || user?.nombreCompleto || 'Usuario';
     this.initChartOptions();
+    // Despertar el servicio de tikets en Render antes de cargar datos
+    this.http.get(`${this.apiUrl}/tickets/ping`, { withCredentials: true }).subscribe({ error: () => {} });
     this.fetchStats();
   }
 

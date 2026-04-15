@@ -105,6 +105,9 @@ export class Tickets implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Despertar el servicio de tikets en Render
+    this.http.get(`${this.apiUrl}/tickets/ping`, { withCredentials: true }).subscribe({ error: () => {} });
+
     // 1. Obtener estados y prioridades
     this.loadEstados();
     this.loadPrioridades();

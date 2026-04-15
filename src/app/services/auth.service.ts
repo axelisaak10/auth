@@ -315,7 +315,7 @@ export class AuthService {
   }
 
   getToken(): string | null {
-    return this.getTokenFromCookie();
+    return this.getTokenFromCookie() || localStorage.getItem('_access_token');
   }
 
   private getTokenFromCookie(): string | null {
